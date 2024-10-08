@@ -16,13 +16,16 @@ const index = () => {
   const submit = async () => {
     setIsProcessing(true);
     if (await AsyncStorage.getItem("user")) {
-      router.push("home");
+      router.replace("home");
     } else if (await AsyncStorage.getItem("new-user")) {
-      router.push("register-form-1");
+      router.replace("register-form-1");
     } else if (await AsyncStorage.getItem("not-verified-user")) {
-      router.push("verify");
+      router.replace({
+        pathname: "verify",
+        params: { timer: false },
+      });
     } else {
-      router.push("sign-in");
+      router.replace("sign-in");
     }
     setIsProcessing(false);
   };
@@ -71,6 +74,7 @@ const index = () => {
               handlePress={submit}
               containerStyles={styleSheat.button}
               textStyles={styleSheat.buttonText}
+              isLoading={isProcessing}
             />
           </View>
         </ScrollView>

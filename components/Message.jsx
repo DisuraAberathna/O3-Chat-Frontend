@@ -1,17 +1,27 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { StyleSheet, Text, TouchableHighlight, View } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  TouchableHighlight,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { Image } from "expo-image";
 
-const Message = ({ side, status, setReply }) => {
+const Message = ({ data, setReply, setReplyData }) => {
   const colorScheme = useColorScheme();
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+
+  const blurhash = "LEHV6nWB2yk8pyo0adR*.7kCMdnj";
 
   return (
     <View
       style={[
         styleSheat.mainView,
-        side === "right" && styleSheat.rightView,
-        side === "left" && styleSheat.leftView,
+        data.side === "right" && styleSheat.rightView,
+        data.side === "left" && styleSheat.leftView,
       ]}
     >
       <TouchableHighlight
@@ -19,7 +29,11 @@ const Message = ({ side, status, setReply }) => {
         underlayColor={colorScheme === "dark" ? "#404040" : "#F1F1F1"}
         activeOpacity={0.7}
         onPress={() => {
-          setReply(1);
+          setReply(data.id);
+          setReplyData({
+            msg: data.msg,
+            user: data.side === "right" ? data.fromUser : data.toUser,
+          });
         }}
       >
         <Ionicons name="arrow-undo" size={18} />
@@ -28,18 +42,121 @@ const Message = ({ side, status, setReply }) => {
         style={[
           styleSheat.messageView,
           colorScheme === "dark" ? styleSheat.darkView : styleSheat.lightView,
+          data.img && { width: "90%" },
         ]}
       >
-        <Text
-          style={[
-            styleSheat.message,
-            colorScheme === "dark" ? styleSheat.darkText : styleSheat.lightText,
-          ]}
-        >
-          Message
-        </Text>
+        {(data.replyMsg || data.replyImg) && (
+          <View
+            style={[
+              {
+                borderLeftWidth: 5,
+                borderWidth: 1,
+                paddingHorizontal: 8,
+                paddingVertical: 4,
+                marginBottom: 6,
+                borderRadius: 8,
+              },
+              colorScheme === "dark"
+                ? styleSheat.darkBorder
+                : styleSheat.lightBorder,
+            ]}
+          >
+            <View
+              style={{ flexDirection: "row", justifyContent: "space-between" }}
+            >
+              <Text
+                style={[
+                  colorScheme === "dark"
+                    ? styleSheat.darkText
+                    : styleSheat.lightText,
+                ]}
+              >
+                {data.replyUser}
+              </Text>
+              <Text
+                style={[
+                  colorScheme === "dark"
+                    ? styleSheat.darkText
+                    : styleSheat.lightText,
+                ]}
+              >
+                {data.replyTime}
+              </Text>
+            </View>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                columnGap: 8,
+              }}
+            >
+              {data.replyImg && (
+                <Image
+                  source={{
+                    uri: `${apiUrl}/O3-Chat/${
+                      data.replyImg
+                    }?timestamp=${new Date().getTime()}`,
+                  }}
+                  cachePolicy="none"
+                  placeholder={{ blurhash }}
+                  placeholderContentFit="fill"
+                  style={{
+                    width: 60,
+                    height: 60,
+                    borderRadius: 8,
+                    marginVertical: 4,
+                  }}
+                  contentFit="cover"
+                />
+              )}
+              {data.replyMsg && (
+                <Text
+                  style={[
+                    colorScheme === "dark"
+                      ? styleSheat.darkText
+                      : styleSheat.lightText,
+                    { flex: 1 },
+                  ]}
+                >
+                  {`${data.replyMsg.substring(0, 50)}...`}
+                </Text>
+              )}
+            </View>
+          </View>
+        )}
+        {data.img && (
+          <Image
+            source={{
+              uri: `${apiUrl}/O3-Chat/${
+                data.img
+              }?timestamp=${new Date().getTime()}`,
+            }}
+            cachePolicy="none"
+            placeholder={{ blurhash }}
+            placeholderContentFit="fill"
+            style={{
+              width: "100%",
+              height: 400,
+              borderRadius: 8,
+              marginBottom: 4,
+            }}
+            contentFit="cover"
+          />
+        )}
+        {data.msg && (
+          <Text
+            style={[
+              styleSheat.message,
+              colorScheme === "dark"
+                ? styleSheat.darkText
+                : styleSheat.lightText,
+            ]}
+          >
+            {data.msg}
+          </Text>
+        )}
         <View style={[styleSheat.timeView]}>
-          {side === "left" && <Text></Text>}
+          {data.side === "left" && <Text></Text>}
           <Text
             style={[
               styleSheat.time,
@@ -48,13 +165,15 @@ const Message = ({ side, status, setReply }) => {
                 : styleSheat.lightText,
             ]}
           >
-            Time
+            {data.time}
           </Text>
-          {side === "right" && (
+          {data.side === "right" && (
             <>
               <Ionicons
                 name={`${
-                  status === 1 ? "checkmark-done-outline" : "checkmark-outline"
+                  data.status === 1
+                    ? "checkmark-outline"
+                    : "checkmark-done-outline"
                 }`}
                 color={"#15a9f9"}
                 size={14}
@@ -94,11 +213,16 @@ const styleSheat = StyleSheet.create({
     alignItems: "center",
   },
   messageView: {
-    maxWidth: "80%",
-    minWidth: "30%",
-    borderRadius: 8,
+    width: "70%",
+    borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 12,
+  },
+  darkBorder: {
+    borderColor: "#d1d5db",
+  },
+  lightBorder: {
+    borderColor: "#6b7280",
   },
   darkView: {
     backgroundColor: "#000",

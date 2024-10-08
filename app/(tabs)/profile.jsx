@@ -19,29 +19,29 @@ import { Image } from "expo-image";
 import icons from "@/constants/icons";
 import UpdatePassword from "@/components/UpdatePassword";
 
-const MenuItems = [
+const menuItems = [
   {
     title: "New Chat",
     handlePress: () => {
-      router.replace({
-        pathname: "/new-chat",
-        params: { back: "/profile" },
+      router.push({
+        pathname: "new-chat",
+        params: { back: "profile" },
       });
     },
   },
   {
     title: "Help",
     handlePress: () => {
-      router.replace({
-        pathname: "/help",
-        params: { back: "/profile" },
+      router.push({
+        pathname: "help",
+        params: { back: "profile" },
       });
     },
   },
   {
     title: "Sign Out",
     handlePress: async () => {
-      AsyncStorage.removeItem("user");
+      await AsyncStorage.removeItem("user");
       router.replace("sign-in");
     },
   },
@@ -117,23 +117,13 @@ const profile = () => {
   const contactDetails = [
     {
       title: "Mobile Number",
-      editable: true,
+      editable: false,
       value: user && user.mobile,
-      handlePress: () => {
-        setTitle("Mobile Number");
-        setValue(user && user.mobile);
-        setBottomSheetVisibility(true);
-      },
     },
     {
       title: "Email",
-      editable: true,
+      editable: false,
       value: user && user.email,
-      handlePress: () => {
-        setTitle("Email");
-        setValue(user && user.email);
-        setBottomSheetVisibility(true);
-      },
     },
   ];
 
@@ -145,7 +135,7 @@ const profile = () => {
           : styleSheat.lightMainView
       }
     >
-      <PrimaryHeader title="User Profile" menu={true} menuItems={MenuItems} />
+      <PrimaryHeader title="User Profile" menu={true} menuItems={menuItems} />
       {user && (
         <ScrollView>
           <View style={styleSheat.imageView}>
@@ -282,7 +272,7 @@ const profile = () => {
                   />
                 </>
               </TouchableHighlight>
-              {visibility && <UpdatePassword />}
+              {visibility && <UpdatePassword user={user} />}
             </View>
           </View>
         </ScrollView>

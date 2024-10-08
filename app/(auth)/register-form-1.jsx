@@ -33,7 +33,7 @@ const registerForm1 = () => {
   };
 
   const submit = async () => {
-    if (firstName === "") {
+    if (firstName.length === 0) {
       Alert.alert("Warning", "Please enter your first name!");
     } else if (firstName.length < 3) {
       Alert.alert(
@@ -47,7 +47,7 @@ const registerForm1 = () => {
       );
     } else if (containsNumbers(firstName)) {
       Alert.alert("Warning", "Your first name can not has numbers!");
-    } else if (lastName === "") {
+    } else if (lastName.length === 0) {
       Alert.alert("Warning", "Please enter your last name!");
     } else if (lastName.length < 3) {
       Alert.alert(
@@ -61,7 +61,7 @@ const registerForm1 = () => {
       );
     } else if (containsNumbers(lastName)) {
       Alert.alert("Warning", "Your last name can not has numbers!");
-    } else if (password === "") {
+    } else if (password.length === 0) {
       Alert.alert("Warning", "Please enter your password!");
     } else if (password.length < 5) {
       Alert.alert("Warning", "Your password must have more than 5 characters!");
@@ -83,8 +83,8 @@ const registerForm1 = () => {
 
       try {
         await AsyncStorage.setItem("new-user", JSON.stringify(new_user));
-        AsyncStorage.removeItem("remember-me");
-        router.replace("/register-form-2");
+        await AsyncStorage.removeItem("remember-me");
+        router.replace("register-form-2");
       } catch (error) {
         Alert.alert("Error", error);
       }
@@ -158,6 +158,7 @@ const registerForm1 = () => {
               containerStyles={styleSheat.button}
               textStyles={styleSheat.buttonText}
               handlePress={submit}
+              isLoading={isProcessing}
             />
             <View style={styleSheat.linkView}>
               <Text
@@ -170,7 +171,7 @@ const registerForm1 = () => {
               >
                 Already have an account?
               </Text>
-              <Link href="/sign-in" style={styleSheat.link}>
+              <Link href="sign-in" style={styleSheat.link}>
                 Sign In
               </Link>
             </View>

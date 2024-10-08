@@ -15,6 +15,7 @@ import plus from "@/assets/icons/plus.png";
 import minus from "@/assets/icons/minus.png";
 import send from "@/assets/icons/send.png";
 import clip from "@/assets/icons/clip.png";
+import emptyChat from "@/assets/icons/empty-chat.png";
 
 export default {
   eyeHide,
@@ -34,4 +35,5 @@ export default {
   minus,
   send,
   clip,
+  emptyChat,
 };

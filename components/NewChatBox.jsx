@@ -39,7 +39,7 @@ const NewChatBox = ({ data }) => {
               data.image
             }?timestamp=${new Date().getTime()}`,
           }}
-          cachePolicy="reload"
+           cachePolicy="none"
           placeholder={{ blurhash }}
           style={[
             styleSheat.profileImage,

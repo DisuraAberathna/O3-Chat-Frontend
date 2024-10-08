@@ -6,8 +6,12 @@ import { router } from "expo-router";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 
-const MessageBox = ({ id }) => {
+const MessageBox = ({ data }) => {
   const colorScheme = useColorScheme();
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+
+  const blurhash =
+    "|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[";
 
   return (
     <TouchableHighlight
@@ -18,7 +22,12 @@ const MessageBox = ({ id }) => {
       onPress={() => {
         router.replace({
           pathname: "/chat",
-          params: { id: id },
+          params: {
+            id: data.id,
+            name: data.name,
+            image: data.image,
+            bio: data.bio,
+          },
         });
       }}
       underlayColor={colorScheme === "dark" ? "#404040" : "#F1F1F1"}
@@ -27,8 +36,12 @@ const MessageBox = ({ id }) => {
       <>
         <Image
           source={{
-            uri: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTDJzEaxLN-jGRYYUO65pWu7Q9GXoNt4LUSSA&s",
+            uri: `${apiUrl}/O3-Chat/${
+              data.image
+            }?timestamp=${new Date().getTime()}`,
           }}
+           cachePolicy="none"
+          placeholder={{ blurhash }}
           style={[
             styleSheat.profileImage,
             colorScheme === "dark"
@@ -47,11 +60,20 @@ const MessageBox = ({ id }) => {
                   : styleSheat.lightText,
               ]}
             >
-              User's Name
+              {data.name}
             </Text>
             <View style={styleSheat.messageView}>
-              {/* <Ionicons name="checkmark-outline" color={"#fff"} size={14}/> */}
-              <Ionicons name="checkmark-done-outline" color={"#15a9f9"} size={14}/>
+              {data.view && (
+                <Ionicons
+                  name={`${
+                    data.status === 1
+                      ? "checkmark-outline"
+                      : "checkmark-done-outline"
+                  }`}
+                  color={"#15a9f9"}
+                  size={14}
+                />
+              )}
               <Text
                 style={[
                   styleSheat.message,
@@ -60,7 +82,7 @@ const MessageBox = ({ id }) => {
                     : styleSheat.lightText,
                 ]}
               >
-                Hey.............................
+                {`${data.msg.substring(0, 40)}...`}
               </Text>
             </View>
           </View>
@@ -73,11 +95,13 @@ const MessageBox = ({ id }) => {
                   : styleSheat.lightText,
               ]}
             >
-              2024/09/25
+              {data.time}
             </Text>
-            <View style={styleSheat.countView}>
-              <Text style={styleSheat.count}>99+</Text>
-            </View>
+            {data.count > 0 && (
+              <View style={styleSheat.countView}>
+                <Text style={styleSheat.count}>{data.count}</Text>
+              </View>
+            )}
           </View>
         </View>
       </>

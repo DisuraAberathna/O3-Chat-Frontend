@@ -63,8 +63,14 @@ const signin = () => {
                 userId: data.user,
               };
 
-              AsyncStorage.setItem("not-verified-user", JSON.stringify(user));
-              router.replace("verify");
+              await AsyncStorage.setItem(
+                "not-verified-user",
+                JSON.stringify(user)
+              );
+              router.replace({
+                pathname: "verify",
+                params: { timer: false },
+              });
             } else {
               if (rememberMe) {
                 const rememberObject = {
@@ -72,16 +78,16 @@ const signin = () => {
                   password: password,
                 };
 
-                AsyncStorage.setItem(
+                await AsyncStorage.setItem(
                   "remember-me",
                   JSON.stringify(rememberObject)
                 );
               } else {
-                AsyncStorage.removeItem("remember-me");
+                await AsyncStorage.removeItem("remember-me");
               }
 
-              AsyncStorage.removeItem("new-user");
-              AsyncStorage.setItem("user", JSON.stringify(data.user));
+              await AsyncStorage.removeItem("new-user");
+              await AsyncStorage.setItem("user", JSON.stringify(data.user));
               router.replace("home");
             }
           } else {
@@ -178,6 +184,7 @@ const signin = () => {
               containerStyles={styleSheat.button}
               textStyles={styleSheat.buttonText}
               handlePress={submit}
+              isLoading={isProcessing}
             />
             <View style={styleSheat.linkView}>
               <Text
@@ -190,7 +197,7 @@ const signin = () => {
               >
                 Don't have an account?
               </Text>
-              <Link href="/register-form-1" style={styleSheat.link}>
+              <Link href="register-form-1" style={styleSheat.link}>
                 Register
               </Link>
             </View>

@@ -36,7 +36,7 @@ const BottomSheet = ({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [6, 6],
-      quality: 1,
+      quality: 0.5,
     });
 
     if (!result.canceled) {
@@ -49,7 +49,7 @@ const BottomSheet = ({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [6, 6],
-      quality: 1,
+      quality: 0.5,
     });
 
     if (!result.canceled) {
@@ -185,6 +185,7 @@ const BottomSheet = ({
                   title={isProcessing ? "Processing..." : "Save Changes"}
                   containerStyles={{ width: 208 }}
                   handlePress={saveImage}
+                  isLoading={isProcessing}
                 />
               )}
             </>
@@ -192,9 +193,10 @@ const BottomSheet = ({
             <View style={styleSheat.buttonView}>
               <PrimaryInput title={title} value={value} />
               <PrimaryButton
-                title="Save Changes"
+                title={isProcessing ? "Processing..." : "Save Changes"}
                 containerStyles={styleSheat.button}
                 handlePress={handlePress}
+                isLoading={isProcessing}
               />
             </View>
           )}

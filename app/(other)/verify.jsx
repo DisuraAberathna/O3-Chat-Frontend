@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
   ScrollView,
@@ -13,17 +13,20 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import images from "@/constants/images";
 import { Image } from "expo-image";
 import PrimaryButton from "@/components/PrimaryButton";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const verify = () => {
   const colorScheme = useColorScheme();
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+  const { timer } = useLocalSearchParams();
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [isCompleteOtp, setIsCompleteOtp] = useState(false);
   const [otp, setOtp] = useState(new Array(6).fill(""));
   const [focusedInput, setFocusedInput] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(3 * 60);
+  const [isRunning, setIsRunning] = useState(false);
 
   const inputs = useRef([]);
 
@@ -51,6 +54,31 @@ const verify = () => {
     }
   };
 
+  useEffect(async () => {
+    let interval;
+    if (isRunning && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft((prevTime) => prevTime - 1);
+      }, 1000);
+    } else if (timeLeft === 0) {
+      clearInterval(interval);
+      await AsyncStorage.removeItem("not-verified-user");
+      router.replace("sign-in");
+    }
+
+    return () => clearInterval(interval);
+  }, [isRunning, timeLeft]);
+
+  useEffect(() => {
+    setIsRunning(timer);
+  }, []);
+
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${minutes}:${secs < 10 ? "0" : ""}${secs}`;
+  };
+
   const verify = async () => {
     if (isCompleteOtp) {
       setIsProcessing(true);
@@ -63,6 +91,8 @@ const verify = () => {
           const reqObject = {
             id: not_verified_user.userId,
             otp: otp.join(""),
+            serverOTP: timer && not_verified_user.serverOTP,
+            password: timer && not_verified_user.password,
           };
 
           const response = await fetch(`${apiUrl}/O3-Chat/Verify`, {
@@ -77,10 +107,15 @@ const verify = () => {
             const data = await response.json();
 
             if (data.ok) {
-              AsyncStorage.removeItem("not-verified-user");
+              await AsyncStorage.removeItem("not-verified-user");
 
-              AsyncStorage.setItem("user", JSON.stringify(data.user));
-              router.replace("home");
+              if (timer) {
+                await AsyncStorage.removeItem("remember-me");
+                router.replace("sign-in");
+              } else {
+                await AsyncStorage.setItem("user", JSON.stringify(data.user));
+                router.replace("home");
+              }
             } else {
               Alert.alert("Warning", data.msg);
             }
@@ -205,11 +240,24 @@ const verify = () => {
                 />
               ))}
             </View>
+            {timer && (
+              <Text
+                style={[
+                  styleSheat.timerText,
+                  colorScheme === "dark"
+                    ? styleSheat.darkText
+                    : styleSheat.lightText,
+                ]}
+              >
+                {formatTime(timeLeft)}
+              </Text>
+            )}
             <PrimaryButton
               title={isProcessing ? "Processing..." : "Verify"}
               containerStyles={styleSheat.button}
               textStyles={styleSheat.buttonText}
               handlePress={verify}
+              isLoading={isProcessing}
             />
             <TouchableHighlight
               style={styleSheat.otpButton}
@@ -292,13 +340,16 @@ const styleSheat = StyleSheet.create({
   focusedInput: {
     borderColor: "#0C4EAC",
   },
+  timerText: {
+    fontSize: 24,
+    marginVertical: 20,
+  },
   inputButtonView: {
     width: "85%",
     alignItems: "center",
   },
   button: {
     width: "100%",
-    marginTop: 32,
   },
   buttonText: {
     fontSize: 20,

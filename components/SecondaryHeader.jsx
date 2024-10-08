@@ -16,15 +16,25 @@ const SecondaryHeader = ({ data, menu, menuItems, back, backPress }) => {
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
   const [popupMenuVisible, setPopupMenuVisible] = useState(false);
+  const [userModalVisible, setUserModalVisible] = useState(false);
 
   const blurhash =
     "|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[";
 
-  const OpenPopupMenuModal = () => {
+  const openPopupMenuModal = () => {
     setPopupMenuVisible(true);
   };
-  const ClosePopupMenuModal = () => {
+
+  const closePopupMenuModal = () => {
     setPopupMenuVisible(false);
+  };
+
+  const openUserModal = () => {
+    setUserModalVisible(true);
+  };
+
+  const closeUserModal = () => {
+    setUserModalVisible(false);
   };
 
   const ModalItem = ({ title, handlePress }) => {
@@ -54,7 +64,8 @@ const SecondaryHeader = ({ data, menu, menuItems, back, backPress }) => {
         colorScheme === "dark" ? styleSheat.darkView : styleSheat.lightView,
       ]}
       onTouchEnd={() => {
-        popupMenuVisible && ClosePopupMenuModal();
+        popupMenuVisible && closePopupMenuModal();
+        userModalVisible && closeUserModal();
       }}
     >
       {back && (
@@ -78,7 +89,7 @@ const SecondaryHeader = ({ data, menu, menuItems, back, backPress }) => {
         style={styleSheat.userDetails}
         activeOpacity={0.7}
         underlayColor={colorScheme === "dark" ? "#404040" : "#F1F1F1"}
-        onPress={() => {}}
+        onPress={openUserModal}
       >
         <>
           <Image
@@ -87,7 +98,7 @@ const SecondaryHeader = ({ data, menu, menuItems, back, backPress }) => {
                 data.image
               }?timestamp=${new Date().getTime()}`,
             }}
-            cachePolicy="reload"
+             cachePolicy="none"
             placeholder={{ blurhash }}
             style={[
               styleSheat.profileImage,
@@ -109,13 +120,69 @@ const SecondaryHeader = ({ data, menu, menuItems, back, backPress }) => {
           </Text>
         </>
       </TouchableHighlight>
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={userModalVisible}
+        onRequestClose={closeUserModal}
+      >
+        <TouchableWithoutFeedback onPress={closeUserModal}>
+          <View style={styleSheat.modal}>
+            <View
+              style={[
+                styleSheat.modalView,
+                colorScheme === "dark"
+                  ? styleSheat.darkView
+                  : styleSheat.lightView,
+              ]}
+            >
+              <Image
+                source={{
+                  uri: `${apiUrl}/O3-Chat/${
+                    data.image
+                  }?timestamp=${new Date().getTime()}`,
+                }}
+                 cachePolicy="none"
+                placeholder={{ blurhash }}
+                style={[
+                  styleSheat.modalImage,
+                  colorScheme === "dark"
+                    ? { borderColor: "#4b5563" }
+                    : { borderColor: "#d1d5db" },
+                ]}
+                contentFit="contain"
+              />
+              <Text
+                style={[
+                  colorScheme === "dark"
+                    ? styleSheat.darkText
+                    : styleSheat.lightText,
+                  styleSheat.usersName,
+                ]}
+              >
+                {data.name}
+              </Text>
+              <Text
+                style={[
+                  colorScheme === "dark"
+                    ? styleSheat.darkText
+                    : styleSheat.lightText,
+                  styleSheat.usersName,
+                ]}
+              >
+                {data.bio}
+              </Text>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
       {menu && (
         <>
           <TouchableHighlight
             style={styleSheat.menuButton}
             activeOpacity={0.7}
             underlayColor={colorScheme === "dark" ? "#404040" : "#F1F1F1"}
-            onPress={OpenPopupMenuModal}
+            onPress={openPopupMenuModal}
           >
             <Image
               source={icons.menu}
@@ -130,9 +197,9 @@ const SecondaryHeader = ({ data, menu, menuItems, back, backPress }) => {
             animationType="fade"
             transparent={true}
             visible={popupMenuVisible}
-            onRequestClose={ClosePopupMenuModal}
+            onRequestClose={closePopupMenuModal}
           >
-            <TouchableWithoutFeedback onPress={ClosePopupMenuModal}>
+            <TouchableWithoutFeedback onPress={closePopupMenuModal}>
               <View style={styleSheat.menu}>
                 <View
                   style={[
@@ -229,6 +296,28 @@ const styleSheat = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 8,
     borderWidth: 2,
+  },
+  modal: {
+    alignItems: "center",
+    paddingRight: 6,
+    marginTop: 70,
+  },
+  modalView: {
+    width: "90%",
+    borderRadius: 8,
+    paddingVertical: 30,
+    borderWidth: 2,
+    justifyContent: "center",
+    alignItems: "center",
+    rowGap: 8,
+  },
+  modalImage: {
+    width: 150,
+    height: 150,
+    borderWidth: 2,
+    borderRadius: 9999,
+    justifyContent: "center",
+    alignItems: "center",
   },
   menuItemText: {
     fontSize: 16,

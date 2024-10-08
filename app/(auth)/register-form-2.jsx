@@ -42,7 +42,7 @@ const registerForm2 = () => {
         "Warning",
         "Your username has exceeded the maximum character limit!"
       );
-    } else if (email === "") {
+    } else if (email.length === 0) {
       Alert.alert("Warning", "Please enter your email!");
     } else if (!validateEmail(email)) {
       Alert.alert("Warning", "Please enter valid email!");
@@ -81,13 +81,13 @@ const registerForm2 = () => {
             const data = await response.json();
 
             if (data.ok) {
-              AsyncStorage.removeItem("new-user");
+              await AsyncStorage.removeItem("new-user");
 
               const user = {
                 userId: data.user,
               };
 
-              AsyncStorage.setItem("not-verified-user", JSON.stringify(user));
+              await AsyncStorage.setItem("not-verified-user", JSON.stringify(user));
 
               Alert.alert(
                 "Information",
@@ -95,7 +95,10 @@ const registerForm2 = () => {
                 {
                   text: "OK",
                   onPress: () => {
-                    router.replace("verify");
+                    router.replace({
+                      pathname: "verify",
+                      params: { timer: false },
+                    });
                   },
                 }
               );
@@ -195,6 +198,7 @@ const registerForm2 = () => {
               containerStyles={styleSheat.button}
               textStyles={styleSheat.buttonText}
               handlePress={submit}
+              isLoading={isProcessing}
             />
           </View>
           <BottomSheet

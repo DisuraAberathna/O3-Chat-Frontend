@@ -46,7 +46,7 @@ const PrimaryImagePicker = ({
                 : { uri: image }
             }
             placeholder={{ blurhash }}
-            cachePolicy="reload"
+             cachePolicy="none"
             style={[
               image === null
                 ? { width: 144, height: 144 }

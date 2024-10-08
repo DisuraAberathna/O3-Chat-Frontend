@@ -19,7 +19,6 @@ import { FlashList } from "@shopify/flash-list";
 
 const newChat = () => {
   const colorScheme = useColorScheme();
-  const { back } = useLocalSearchParams();
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
   const [searchFieldVisibility, setSearchFieldVisibility] = useState(false);
@@ -38,16 +37,13 @@ const newChat = () => {
     {
       title: "Help",
       handlePress: () => {
-        router.replace({
-          pathname: "/help",
-          params: { back: "/home" },
-        });
+        router.push("help");
       },
     },
     {
       title: "Sign Out",
       handlePress: async () => {
-        AsyncStorage.removeItem("user");
+        await AsyncStorage.removeItem("user");
         router.replace("sign-in");
       },
     },
@@ -61,16 +57,21 @@ const newChat = () => {
     loadUsers();
   }, []);
 
+  useEffect(() => {
+    loadUsers();
+  }, [searchText]);
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    setTimeout(() => {
-      loadUsers();
-      setRefreshing(false);
-    }, 2000);
+    loadUsers();
+    setRefreshing(false);
   }, []);
 
   const loadUsers = async () => {
-    setIsLoaded(false);
+    if (searchText.length !== 0) {
+      setIsLoaded(false);
+    }
+
     const storedData = await AsyncStorage.getItem("user");
 
     try {
@@ -125,7 +126,7 @@ const newChat = () => {
         title="New Chat"
         back={true}
         backPress={() => {
-          router.replace(back);
+          router.back();
         }}
         menu={true}
         menuItems={MenuItems}
@@ -171,7 +172,7 @@ const newChat = () => {
                     </Text>
                   }
                   ListHeaderComponentStyle={styleSheat.listHeader}
-                  estimatedItemSize={200}
+                  estimatedItemSize={70}
                   refreshing={true}
                   showsVerticalScrollIndicator={true}
                   contentContainerStyle={styleSheat.mainView}

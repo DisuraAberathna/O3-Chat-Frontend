@@ -98,7 +98,7 @@ const MenuItems = [
   {
     title: "Sign Out",
     handlePress: async () => {
-      AsyncStorage.removeItem("user");
+      await AsyncStorage.removeItem("user");
       router.replace("sign-in");
     },
   },
@@ -109,8 +109,6 @@ const Help = () => {
 
   const [idx, setIdx] = useState();
   const [visibility, setVisibility] = useState(false);
-
-  const { back } = useLocalSearchParams();
 
   const AnswerView = ({ text, index }) => {
     return (
@@ -141,7 +139,7 @@ const Help = () => {
         title="FAQs"
         back={true}
         backPress={() => {
-          router.replace(back);
+          router.back();
         }}
         menu={true}
         menuItems={MenuItems}

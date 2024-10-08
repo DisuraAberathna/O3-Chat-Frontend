@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
+  RefreshControl,
   StyleSheet,
   Text,
   TextInput,
@@ -10,7 +12,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import SecondaryHeader from "@/components/SecondaryHeader";
 import { router, useLocalSearchParams } from "expo-router";
-import { ScrollView } from "react-native";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { TouchableHighlight } from "react-native";
 import { Image } from "expo-image";
@@ -19,20 +20,13 @@ import Message from "../../components/Message";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
-const MenuItems = [
-  {
-    title: "Delete Chat",
-    handlePress: () => {
-      router.replace("home");
-    },
-  },
-];
+import { FlashList } from "@shopify/flash-list";
 
 const Chat = () => {
   const colorScheme = useColorScheme();
   const { id, name, image, bio } = useLocalSearchParams();
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+  const flashListRef = useRef(null);
 
   const [focusedInput, setFocusedInput] = useState(false);
   const [reply, setReply] = useState(0);
@@ -40,10 +34,13 @@ const Chat = () => {
   const [message, setMessage] = useState("");
   const [user, setUser] = useState(null);
   const [chats, setChats] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [replyData, setReplyData] = useState({});
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     loadChats();
-  }, []);
+  }, [chats]);
 
   const loadChats = async () => {
     try {
@@ -71,6 +68,7 @@ const Chat = () => {
 
           if (data.ok) {
             setChats(data.chats);
+            setIsLoaded(true);
           } else {
             Alert.alert("Warning", data.msg);
           }
@@ -92,7 +90,7 @@ const Chat = () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      quality: 1,
+      quality: 0.5,
     });
 
     if (!result.canceled) {
@@ -133,6 +131,9 @@ const Chat = () => {
             setMessage("");
             setMsgImage(null);
             setReply(0);
+            loadChats();
+            setReplyData({});
+            setFocusedInput(false);
           } else {
             Alert.alert(
               "Error",
@@ -148,6 +149,18 @@ const Chat = () => {
     }
   };
 
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    loadChats();
+    setRefreshing(false);
+  }, []);
+
+  const goToBottom = () => {
+    if (flashListRef.current && chats.length > 0) {
+      flashListRef.current.scrollToEnd({ animated: true });
+    }
+  };
+
   return (
     <SafeAreaView
       style={
@@ -160,17 +173,90 @@ const Chat = () => {
         data={{ id: id, name: name, image: image, bio: bio }}
         back={true}
         backPress={() => {
+          // router.back();
           router.replace("home");
         }}
-        menu={true}
-        menuItems={MenuItems}
       />
-      <ScrollView>
-        <Message side="right" status={1} setReply={setReply} />
-        <Message side="left" status={1} setReply={setReply} />
-        <Message side="right" status={1} setReply={setReply} />
-        <Message side="right" status={1} setReply={setReply} />
-      </ScrollView>
+      {isLoaded ? (
+        <FlashList
+          ref={flashListRef}
+          data={chats}
+          renderItem={({ item }) => {
+            return (
+              <Message
+                data={{
+                  id: item.id,
+                  fromUser: item.fromUser,
+                  toUser: item.toUser,
+                  img: item.img,
+                  msg: item.msg,
+                  side: item.side,
+                  status: item.status,
+                  time: item.time,
+                  replyMsg: item.replyMsg,
+                  replyUser: item.replyUser,
+                  replyImg: item.replyImg,
+                  replyTime: item.replyTime,
+                }}
+                setReply={setReply}
+                setReplyData={setReplyData}
+              />
+            );
+          }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          estimatedItemSize={50}
+          refreshing={refreshing}
+          showsVerticalScrollIndicator={true}
+          contentContainerStyle={styleSheat.mainView}
+          keyExtractor={(item) => item.id}
+          onContentSizeChange={goToBottom}
+          ListEmptyComponent={
+            <View
+              style={[
+                {
+                  paddingHorizontal: 12,
+                  paddingVertical: 24,
+                  margin: 12,
+                  borderRadius: 12,
+                  alignItems: "center",
+                },
+                colorScheme === "dark"
+                  ? styleSheat.darkView
+                  : styleSheat.lightView,
+              ]}
+            >
+              <Image
+                source={icons.emptyChat}
+                style={{
+                  width: 100,
+                  height: 100,
+                  tintColor: colorScheme === "dark" ? "#fff" : "#0C4EAC",
+                }}
+              />
+              <Text
+                style={[
+                  {
+                    fontSize: 24,
+                    lineHeight: 28,
+                    fontWeight: "500",
+                  },
+                  colorScheme === "dark"
+                    ? styleSheat.darkText
+                    : styleSheat.lightText,
+                ]}
+              >
+                No Chats Yet
+              </Text>
+            </View>
+          }
+        />
+      ) : (
+        <View style={styleSheat.loadView}>
+          <ActivityIndicator size={"large"} color={"#0C4EAC"} />
+        </View>
+      )}
       <View
         style={
           colorScheme === "dark" ? styleSheat.darkView : styleSheat.lightView
@@ -232,7 +318,7 @@ const Chat = () => {
                   : styleSheat.lightText
               }
             >
-              User
+              {replyData.user}
             </Text>
             <Text
               style={
@@ -241,7 +327,7 @@ const Chat = () => {
                   : styleSheat.lightText
               }
             >
-              Message
+              {replyData.msg && `${replyData.msg.substring(0, 50)}...`}
             </Text>
           </View>
         )}
@@ -271,6 +357,7 @@ const Chat = () => {
               source={{ uri: msgImage }}
               style={{ width: "100%", height: 200 }}
               contentFit="contain"
+              cachePolicy="none"
             />
           </View>
         )}
@@ -341,6 +428,10 @@ const styleSheat = StyleSheet.create({
   lightMainView: {
     flex: 1,
     backgroundColor: "#e2e8f0",
+  },
+  mainView: {
+    paddingBottom: 8,
+    paddingHorizontal: 4,
   },
   darkView: {
     backgroundColor: "#000",
@@ -429,5 +520,9 @@ const styleSheat = StyleSheet.create({
     tintColor: "#fff",
     width: 20,
     height: 20,
+  },
+  loadView: {
+    flex: 1,
+    padding: 12,
   },
 });
