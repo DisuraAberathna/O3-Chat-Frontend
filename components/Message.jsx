@@ -1,12 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import {
-  StyleSheet,
-  Text,
-  TouchableHighlight,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { StyleSheet, Text, TouchableHighlight, View } from "react-native";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { Image } from "expo-image";
 
@@ -32,7 +26,7 @@ const Message = ({ data, setReply, setReplyData }) => {
           setReply(data.id);
           setReplyData({
             msg: data.msg,
-            user: data.side === "right" ? data.fromUser : data.toUser,
+            user: data.fromUser,
           });
         }}
       >
