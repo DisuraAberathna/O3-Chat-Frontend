@@ -153,7 +153,6 @@ const home = () => {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
         >
-          {/* {users.length !== 0 && ( */}
           <FlashList
             data={users}
             renderItem={({ item }) => {
@@ -229,7 +228,6 @@ const home = () => {
               )
             }
           />
-          {/* )} */}
           {users.length === 0 && searchText.length !== 0 && (
             <View
               style={[
@@ -246,16 +244,11 @@ const home = () => {
               ]}
             >
               <Text
-                style={[
-                  {
-                    fontSize: 24,
-                    lineHeight: 28,
-                    fontWeight: "500",
-                  },
+                style={
                   colorScheme === "dark"
                     ? styleSheat.darkText
-                    : styleSheat.lightText,
-                ]}
+                    : styleSheat.lightText
+                }
               >
                 Result not fount for '{searchText}'
               </Text>

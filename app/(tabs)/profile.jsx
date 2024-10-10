@@ -136,10 +136,13 @@ const profile = () => {
             if (title === "Username") {
               const storedData = await AsyncStorage.getItem("remember-me");
               if (storedData !== null) {
+                const userData = JSON.parse(storedData);
+
                 const rememberMe = {
                   username: data.user.username,
-                  password: data.user.password,
+                  password: userData.password,
                 };
+
                 await AsyncStorage.setItem(
                   "remember-me",
                   JSON.stringify(rememberMe)
