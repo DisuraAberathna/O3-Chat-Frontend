@@ -37,10 +37,11 @@ const Chat = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [replyData, setReplyData] = useState({});
   const [isLoaded, setIsLoaded] = useState(false);
+  const [load, setLoad] = useState(true);
 
   useEffect(() => {
     loadChats();
-  }, [chats]);
+  }, [load]);
 
   const loadChats = async () => {
     try {
@@ -69,6 +70,7 @@ const Chat = () => {
           if (data.ok) {
             setChats(data.chats);
             setIsLoaded(true);
+            setLoad(false);
           } else {
             Alert.alert("Warning", data.msg);
           }
@@ -128,10 +130,10 @@ const Chat = () => {
           });
 
           if (response.ok) {
+            setLoad(true);
             setMessage("");
             setMsgImage(null);
             setReply(0);
-            loadChats();
             setReplyData({});
             setFocusedInput(false);
           } else {
@@ -173,7 +175,6 @@ const Chat = () => {
         data={{ id: id, name: name, image: image, bio: bio }}
         back={true}
         backPress={() => {
-          // router.back();
           router.replace("home");
         }}
       />

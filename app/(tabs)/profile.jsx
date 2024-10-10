@@ -4,6 +4,7 @@ import {
   ScrollView,
   TouchableHighlight,
   StyleSheet,
+  Alert,
 } from "react-native";
 import React, { useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -18,6 +19,7 @@ import PrimaryImagePicker from "@/components/PrimaryImagePicker";
 import { Image } from "expo-image";
 import icons from "@/constants/icons";
 import UpdatePassword from "@/components/UpdatePassword";
+import { containsNumbers } from "@/hooks/validation";
 
 const menuItems = [
   {
@@ -49,6 +51,7 @@ const menuItems = [
 
 const profile = () => {
   const colorScheme = useColorScheme();
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
   const [bottomSheetVisibility, setBottomSheetVisibility] = useState(false);
   const [title, setTitle] = useState();
@@ -67,6 +70,104 @@ const profile = () => {
     }
   };
 
+  const update = async () => {
+    if (title === "Username" && value.length === 0) {
+      Alert.alert("Warning", "Please enter your username!");
+    } else if (title === "Username" && value.length < 3) {
+      Alert.alert("Warning", "Your username must have more than 3 characters!");
+    } else if (title === "Username" && value.length > 20) {
+      Alert.alert(
+        "Warning",
+        "Your username has exceeded the maximum character limit!"
+      );
+    } else if (title === "First Name" && value.length === 0) {
+      Alert.alert("Warning", "Please enter your first name!");
+    } else if (title === "First Name" && value.length < 3) {
+      Alert.alert(
+        "Warning",
+        "Your first name must have more than 3 characters!"
+      );
+    } else if (title === "First Name" && value.length > 50) {
+      Alert.alert(
+        "Warning",
+        "Your first name has exceeded the maximum character limit!"
+      );
+    } else if (title === "First Name" && containsNumbers(value)) {
+      Alert.alert("Warning", "Your first name can not has numbers!");
+    } else if (title === "Last Name" && value.length === 0) {
+      Alert.alert("Warning", "Please enter your last name!");
+    } else if (title === "Last Name" && value.length < 3) {
+      Alert.alert(
+        "Warning",
+        "Your last name must have more than 3 characters!"
+      );
+    } else if (title === "Last Name" && value.length > 50) {
+      Alert.alert(
+        "Warning",
+        "Your last name has exceeded the maximum character limit!"
+      );
+    } else if (title === "Last Name" && containsNumbers(value)) {
+      Alert.alert("Warning", "Your last name can not has numbers!");
+    } else if (title === "Bio" && value.length === 0) {
+    } else {
+      const reqObject = {
+        user: user.id,
+        username: title === "Username" ? value : user.username,
+        f_name: title === "First Name" ? value : user.f_name,
+        l_name: title === "Last Name" ? value : user.l_name,
+        bio: title === "Bio" ? value : user.bio,
+      };
+
+      try {
+        const response = await fetch(`${apiUrl}/O3-Chat/Update`, {
+          method: "POST",
+          body: JSON.stringify(reqObject),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+
+          if (data.ok) {
+            AsyncStorage.setItem("user", JSON.stringify(data.user));
+
+            if (title === "Username") {
+              const storedData = await AsyncStorage.getItem("remember-me");
+              if (storedData !== null) {
+                const rememberMe = {
+                  username: data.user.username,
+                  password: data.user.password,
+                };
+                await AsyncStorage.setItem(
+                  "remember-me",
+                  JSON.stringify(rememberMe)
+                );
+              }
+            }
+
+            Alert.alert("Information", "Your profile successfully updated!");
+
+            setBottomSheetVisibility(false);
+            setTitle("");
+            setValue("");
+            getUser();
+          } else {
+            Alert.alert("Warning", data.msg);
+          }
+        } else {
+          Alert.alert(
+            "Error",
+            "Profile update failed \nCan not process this request!"
+          );
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  };
+
   useEffect(() => {
     getUser();
   }, []);
@@ -77,9 +178,9 @@ const profile = () => {
       editable: true,
       value: user && user.username,
       handlePress: () => {
+        setBottomSheetVisibility(true);
         setTitle("Username");
         setValue(user && user.username);
-        setBottomSheetVisibility(true);
       },
     },
     {
@@ -87,9 +188,9 @@ const profile = () => {
       editable: true,
       value: user && user.f_name,
       handlePress: () => {
+        setBottomSheetVisibility(true);
         setTitle("First Name");
         setValue(user && user.f_name);
-        setBottomSheetVisibility(true);
       },
     },
     {
@@ -97,9 +198,9 @@ const profile = () => {
       editable: true,
       value: user && user.l_name,
       handlePress: () => {
+        setBottomSheetVisibility(true);
         setTitle("Last Name");
         setValue(user && user.l_name);
-        setBottomSheetVisibility(true);
       },
     },
     {
@@ -107,9 +208,9 @@ const profile = () => {
       editable: true,
       value: user && user.bio,
       handlePress: () => {
+        setBottomSheetVisibility(true);
         setTitle("Bio");
         setValue(user && user.bio);
-        setBottomSheetVisibility(true);
       },
     },
   ];
@@ -184,6 +285,14 @@ const profile = () => {
                   title={title}
                   value={value}
                   autoSave={true}
+                  setValue={setValue}
+                  handlePress={
+                    (title === "Username" ||
+                      title === "First Name" ||
+                      title === "Last Name" ||
+                      title === "Bio") &&
+                    update
+                  }
                 />
               </View>
             ))}
