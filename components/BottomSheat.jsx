@@ -25,6 +25,7 @@ const BottomSheet = ({
   autoSave,
   title,
   value,
+  setValue,
 }) => {
   const colorScheme = useColorScheme();
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
@@ -191,7 +192,11 @@ const BottomSheet = ({
             </>
           ) : (
             <View style={styleSheat.buttonView}>
-              <PrimaryInput title={title} value={value} />
+              <PrimaryInput
+                title={title}
+                value={value}
+                handleChangeText={setValue}
+              />
               <PrimaryButton
                 title={isProcessing ? "Processing..." : "Save Changes"}
                 containerStyles={styleSheat.button}
