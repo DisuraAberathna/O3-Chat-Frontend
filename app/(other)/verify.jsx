@@ -54,24 +54,33 @@ const verify = () => {
     }
   };
 
-  useEffect(async () => {
+  useEffect(() => {
     let interval;
-    if (isRunning && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft((prevTime) => prevTime - 1);
-      }, 1000);
-    } else if (timeLeft === 0) {
-      clearInterval(interval);
-      await AsyncStorage.removeItem("not-verified-user");
-      router.replace("sign-in");
+
+    const startTimer = async () => {
+      if (isRunning && timeLeft > 0) {
+        interval = setInterval(() => {
+          setTimeLeft((prevTime) => prevTime - 1);
+        }, 1000);
+      } else if (timeLeft === 0) {
+        clearInterval(interval);
+        await AsyncStorage.removeItem("not-verified-user");
+        router.replace("sign-in");
+      }
+    };
+
+    if (timer === "true") {
+      startTimer();
     }
 
     return () => clearInterval(interval);
-  }, [isRunning, timeLeft]);
+  }, [isRunning, timeLeft, timer]);
 
   useEffect(() => {
-    setIsRunning(timer);
-  }, []);
+    if (timer === "true") {
+      setIsRunning(true);
+    }
+  }, [timer]);
 
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
@@ -91,8 +100,8 @@ const verify = () => {
           const reqObject = {
             id: not_verified_user.userId,
             otp: otp.join(""),
-            serverOTP: timer && not_verified_user.serverOTP,
-            password: timer && not_verified_user.password,
+            serverOTP: timer === "true" ? not_verified_user.serverOTP : "",
+            password: timer === "true" ? not_verified_user.password : "",
           };
 
           const response = await fetch(`${apiUrl}/O3-Chat/Verify`, {
@@ -109,7 +118,7 @@ const verify = () => {
             if (data.ok) {
               await AsyncStorage.removeItem("not-verified-user");
 
-              if (timer) {
+              if (timer === "true") {
                 await AsyncStorage.removeItem("remember-me");
                 router.replace("sign-in");
               } else {
@@ -240,7 +249,7 @@ const verify = () => {
                 />
               ))}
             </View>
-            {timer && (
+            {timer === "true" && (
               <Text
                 style={[
                   styleSheat.timerText,
@@ -254,7 +263,10 @@ const verify = () => {
             )}
             <PrimaryButton
               title={isProcessing ? "Processing..." : "Verify"}
-              containerStyles={styleSheat.button}
+              containerStyles={[
+                styleSheat.button,
+                timer !== "true" && { marginTop: 36 },
+              ]}
               textStyles={styleSheat.buttonText}
               handlePress={verify}
               isLoading={isProcessing}
@@ -341,7 +353,6 @@ const styleSheat = StyleSheet.create({
     borderColor: "#0C4EAC",
   },
   timerText: {
-    fontSize: 24,
     marginVertical: 20,
   },
   inputButtonView: {
