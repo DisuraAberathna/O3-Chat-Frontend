@@ -99,7 +99,7 @@ const MenuItems = [
     title: "Sign Out",
     handlePress: async () => {
       await AsyncStorage.removeItem("user");
-      router.replace("sign-in");
+      router.replace("/");
     },
   },
 ];

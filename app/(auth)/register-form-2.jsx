@@ -87,20 +87,25 @@ const registerForm2 = () => {
                 userId: data.user,
               };
 
-              await AsyncStorage.setItem("not-verified-user", JSON.stringify(user));
+              await AsyncStorage.setItem(
+                "not-verified-user",
+                JSON.stringify(user)
+              );
 
               Alert.alert(
                 "Information",
                 "Verification code send to your email!",
-                {
-                  text: "OK",
-                  onPress: () => {
-                    router.replace({
-                      pathname: "verify",
-                      params: { timer: false },
-                    });
+                [
+                  {
+                    text: "OK",
+                    onPress: () => {
+                      router.replace({
+                        pathname: "verify",
+                        params: { timer: false },
+                      });
+                    },
                   },
-                }
+                ]
               );
             } else {
               Alert.alert("Warning", data.msg);
@@ -129,7 +134,7 @@ const registerForm2 = () => {
         colorScheme === "dark" ? styleSheat.darkView : styleSheat.lightView
       }
     >
-      <ScrollView contentContainerStyle={{ height: "100%" }}>
+      <ScrollView contentContainerStyle={{ minHeight: "100%" }}>
         <View style={styleSheat.mainView}>
           <View style={styleSheat.linkView}>
             <Link href="/register-form-1" style={styleSheat.link}>
@@ -156,7 +161,7 @@ const registerForm2 = () => {
             </Text>
           </View>
           <View style={styleSheat.inputView}>
-            <View className="w-full items-center">
+            <View style={{ width: "100%", alignItems: "center" }}>
               <PrimaryImagePicker
                 image={image}
                 title={"Profile Picture"}
