@@ -1,11 +1,10 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { router, useLocalSearchParams } from "expo-router";
-import React, { useCallback, useEffect } from "react";
+import { router } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   RefreshControl,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -14,20 +13,19 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import NewChatBox from "@/components/NewChatBox";
 import PrimaryHeader from "@/components/PrimaryHeader";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { useState } from "react";
 import { FlashList } from "@shopify/flash-list";
 
-const newChat = () => {
+const NewChat = () => {
   const colorScheme = useColorScheme();
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
   const [searchFieldVisibility, setSearchFieldVisibility] = useState(false);
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState({});
   const [isLoaded, setIsLoaded] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [searchText, setSearchText] = useState("");
 
-  const MenuItems = [
+  const menuItems = [
     {
       title: "Search",
       handlePress: () => {
@@ -63,9 +61,8 @@ const newChat = () => {
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    loadUsers();
-    setRefreshing(false);
-  }, []);
+    loadUsers().then(() => setRefreshing(false));
+  }, [searchText]);
 
   const loadUsers = async () => {
     if (searchText.length !== 0) {
@@ -96,30 +93,26 @@ const newChat = () => {
 
           if (data.ok) {
             setIsLoaded(true);
-            setUsers(data.groupedUsers);
+            setUsers(data.users);
           } else {
             Alert.alert("Warning", data.msg);
           }
         } else {
-          Alert.alert(
-            "Error",
-            "Loading failed \nCan not process this request!"
-          );
+          Alert.alert("Error", "Loading failed \nCannot process this request!");
         }
       } else {
         router.replace("sign-in");
       }
     } catch (error) {
       console.error(error);
+      Alert.alert("Error", "An unexpected error occurred.");
     }
   };
 
   return (
     <SafeAreaView
       style={
-        colorScheme === "dark"
-          ? styleSheat.darkMainView
-          : styleSheat.lightMainView
+        colorScheme === "dark" ? styles.darkMainView : styles.lightMainView
       }
     >
       <PrimaryHeader
@@ -129,7 +122,7 @@ const newChat = () => {
           router.back();
         }}
         menu={true}
-        menuItems={MenuItems}
+        menuItems={menuItems}
         searchFieldVisibility={searchFieldVisibility}
         searchText={searchText}
         setSearchText={setSearchText}
@@ -137,80 +130,48 @@ const newChat = () => {
         searchOnPress={loadUsers}
       />
       {isLoaded ? (
-        <ScrollView
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        >
-          {Object.keys(users).length !== 0 ? (
-            <>
-              {Object.keys(users).map((letter) => (
-                <FlashList
-                  data={users[letter]}
-                  renderItem={({ item }) => {
-                    return (
-                      <NewChatBox
-                        data={{
-                          id: item.id,
-                          name: item.name,
-                          bio: item.bio,
-                          image: item.profile_img,
-                        }}
-                      />
-                    );
+        users ? (
+          <FlashList
+            data={users}
+            renderItem={({item}) => {
+              return (
+                <NewChatBox
+                  data={{
+                    id: item.id,
+                    name: item.name,
+                    bio: item.bio,
+                    image: item.profile_img,
                   }}
-                  ListHeaderComponent={
-                    <Text
-                      style={[
-                        styleSheat.listHeaderText,
-                        colorScheme === "dark"
-                          ? styleSheat.darkText
-                          : styleSheat.lightText,
-                      ]}
-                    >
-                      {letter}
-                    </Text>
-                  }
-                  ListHeaderComponentStyle={styleSheat.listHeader}
-                  estimatedItemSize={70}
-                  refreshing={true}
-                  showsVerticalScrollIndicator={true}
-                  contentContainerStyle={styleSheat.mainView}
-                  keyExtractor={(item) => item.id}
-                  key={letter}
                 />
-              ))}
-            </>
-          ) : (
-            <View
+              );
+            }}
+            keyExtractor={(item) => item.id}
+            estimatedItemSize={100}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+            showsVerticalScrollIndicator={true}
+            contentContainerStyle={styles.mainView}
+          />
+        ) : (
+          <View
+            style={[
+              styles.emptyView,
+              colorScheme === "dark" ? styles.darkView : styles.lightView,
+            ]}
+          >
+            <Text
               style={[
-                {
-                  paddingHorizontal: 12,
-                  paddingVertical: 18,
-                  margin: 12,
-                  borderRadius: 12,
-                  alignItems: "center",
-                },
-                colorScheme === "dark"
-                  ? styleSheat.darkView
-                  : styleSheat.lightView,
+                styles.listHeaderText,
+                colorScheme === "dark" ? styles.darkText : styles.lightText,
               ]}
             >
-              <Text
-                style={[
-                  styleSheat.listHeaderText,
-                  colorScheme === "dark"
-                    ? styleSheat.darkText
-                    : styleSheat.lightText,
-                ]}
-              >
-                Result not fount for '{searchText}'
-              </Text>
-            </View>
-          )}
-        </ScrollView>
+              Result not found for '{searchText}'
+            </Text>
+          </View>
+        )
       ) : (
-        <View style={styleSheat.loadView}>
+        <View style={styles.loadView}>
           <ActivityIndicator size={"large"} color={"#0C4EAC"} />
         </View>
       )}
@@ -218,9 +179,9 @@ const newChat = () => {
   );
 };
 
-export default newChat;
+export default NewChat;
 
-const styleSheat = StyleSheet.create({
+const styles = StyleSheet.create({
   darkMainView: {
     flex: 1,
     backgroundColor: "#111827",
@@ -230,15 +191,8 @@ const styleSheat = StyleSheet.create({
     backgroundColor: "#e2e8f0",
   },
   mainView: {
-    paddingBottom: 8,
-    paddingHorizontal: 8,
-  },
-  listHeader: {
-    marginBottom: 4,
-    paddingLeft: 4,
-  },
-  listHeaderText: {
-    fontSize: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
   },
   darkText: {
     color: "#fff",
@@ -247,12 +201,24 @@ const styleSheat = StyleSheet.create({
     color: "#000",
   },
   loadView: {
-    padding: 12,
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  emptyView: {
+    paddingHorizontal: 12,
+    paddingVertical: 18,
+    margin: 12,
+    borderRadius: 12,
+    alignItems: "center",
   },
   darkView: {
     backgroundColor: "#000",
   },
   lightView: {
     backgroundColor: "#fff",
+  },
+  listHeaderText: {
+    fontSize: 16,
   },
 });
