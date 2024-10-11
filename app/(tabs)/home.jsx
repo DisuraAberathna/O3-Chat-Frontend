@@ -217,10 +217,7 @@ const home = () => {
                   <PrimaryButton
                     title="Start Chat"
                     handlePress={() => {
-                      router.replace({
-                        pathname: "new-chat",
-                        params: { back: "home" },
-                      });
+                      router.push("new-chat");
                     }}
                     containerStyles={{ marginTop: 12, width: "50%" }}
                   />
