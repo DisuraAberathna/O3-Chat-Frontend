@@ -39,6 +39,49 @@ const Chat = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [load, setLoad] = useState(true);
 
+  const menuItems = [
+    {
+      title: "Delete Chat",
+      handlePress: async () => {
+        if (user !== null) {
+          const reqObject = {
+            loggedInId: user.id,
+            otherId: id,
+          };
+
+          try {
+            const response = await fetch(`${apiUrl}/O3-Chat/DeleteChat`, {
+              method: "POST",
+              body: JSON.stringify(reqObject),
+              headers: {
+                "Content-Type": "application/json",
+              },
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+
+              if (data.ok) {
+                setLoad(true);
+              } else {
+                Alert.alert("Warning", data.msg);
+              }
+            } else {
+              Alert.alert(
+                "Error",
+                "Chat deleting failed \nCan not process this request!"
+              );
+            }
+          } catch (error) {
+            console.error(error);
+          }
+        } else {
+          router.replace("sign-in");
+        }
+      },
+    },
+  ];
+
   useEffect(() => {
     loadChats();
   }, [load]);
@@ -176,6 +219,8 @@ const Chat = () => {
         backPress={() => {
           router.replace("home");
         }}
+        menu={true}
+        menuItems={menuItems}
       />
       {isLoaded ? (
         <FlashList
