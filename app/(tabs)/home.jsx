@@ -30,7 +30,7 @@ const home = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [searchText, setSearchText] = useState("");
 
-  const MenuItems = [
+  const menuItems = [
     {
       title: "New Chat",
       handlePress: () => {
@@ -140,7 +140,7 @@ const home = () => {
       <PrimaryHeader
         title="O3 Chat"
         menu={true}
-        menuItems={MenuItems}
+        menuItems={menuItems}
         searchFieldVisibility={searchFieldVisibility}
         searchText={searchText}
         setSearchText={setSearchText}
