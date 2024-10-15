@@ -16,7 +16,7 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import { TouchableHighlight } from "react-native";
 import { Image } from "expo-image";
 import icons from "@/constants/icons";
-import Message from "../../components/Message";
+import Message from "@/components/Message";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
