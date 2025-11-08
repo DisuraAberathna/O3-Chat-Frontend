@@ -38,7 +38,7 @@ const UpdatePassword = ({ user }) => {
       };
 
       try {
-        const response = await fetch(`${apiUrl}/O3-Chat/UpdatePaasword`, {
+        const response = await fetch(`${apiUrl}/o3_chat/UpdatePaasword`, {
           method: "POST",
           body: JSON.stringify(reqObject),
           headers: {

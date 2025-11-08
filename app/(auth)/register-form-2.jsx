@@ -72,7 +72,7 @@ const registerForm2 = () => {
           form.append("username", username);
           form.append("email", email);
 
-          const response = await fetch(`${apiUrl}/O3-Chat/Register`, {
+          const response = await fetch(`${apiUrl}/o3_chat/Register`, {
             method: "POST",
             body: form,
           });

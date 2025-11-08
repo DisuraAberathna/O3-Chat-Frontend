@@ -104,7 +104,7 @@ const verify = () => {
             password: timer === "true" ? not_verified_user.password : "",
           };
 
-          const response = await fetch(`${apiUrl}/O3-Chat/Verify`, {
+          const response = await fetch(`${apiUrl}/o3_chat/Verify`, {
             method: "POST",
             body: JSON.stringify(reqObject),
             headers: {
@@ -153,7 +153,7 @@ const verify = () => {
       const storedData = await AsyncStorage.getItem("not-verified-user");
 
       if (storedData !== null) {
-        const response = await fetch(`${apiUrl}/O3-Chat/ResendOTP`, {
+        const response = await fetch(`${apiUrl}/o3_chat/ResendOTP`, {
           method: "POST",
           body: storedData,
           headers: {

@@ -87,7 +87,7 @@ const Message = ({ data, setReply, setReplyData }) => {
               {data.replyImg && (
                 <Image
                   source={{
-                    uri: `${apiUrl}/O3-Chat/${
+                    uri: `${apiUrl}/o3_chat/${
                       data.replyImg
                     }?timestamp=${new Date().getTime()}`,
                   }}
@@ -121,7 +121,7 @@ const Message = ({ data, setReply, setReplyData }) => {
         {data.img && (
           <Image
             source={{
-              uri: `${apiUrl}/O3-Chat/${
+              uri: `${apiUrl}/o3_chat/${
                 data.img
               }?timestamp=${new Date().getTime()}`,
             }}

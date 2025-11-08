@@ -46,7 +46,7 @@ const signin = () => {
           password: password,
         };
 
-        const response = await fetch(`${apiUrl}/O3-Chat/SignIn`, {
+        const response = await fetch(`${apiUrl}/o3_chat/SignIn`, {
           method: "POST",
           body: JSON.stringify(reqObject),
           headers: {

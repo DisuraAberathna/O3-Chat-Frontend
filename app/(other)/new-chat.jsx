@@ -80,7 +80,7 @@ const NewChat = () => {
           searchText: searchText,
         };
 
-        const response = await fetch(`${apiUrl}/O3-Chat/LoadUsers`, {
+        const response = await fetch(`${apiUrl}/o3_chat/LoadUsers`, {
           method: "POST",
           body: JSON.stringify(reqObject),
           headers: {

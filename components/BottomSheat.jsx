@@ -74,7 +74,7 @@ const BottomSheet = ({
           name: "avatar.png",
         });
 
-        const response = await fetch(`${apiUrl}/O3-Chat/SaveProfileImage`, {
+        const response = await fetch(`${apiUrl}/o3_chat/SaveProfileImage`, {
           method: "POST",
           body: form,
         });

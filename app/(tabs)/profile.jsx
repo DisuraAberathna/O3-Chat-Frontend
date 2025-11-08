@@ -119,7 +119,7 @@ const profile = () => {
       };
 
       try {
-        const response = await fetch(`${apiUrl}/O3-Chat/Update`, {
+        const response = await fetch(`${apiUrl}/o3_chat/Update`, {
           method: "POST",
           body: JSON.stringify(reqObject),
           headers: {

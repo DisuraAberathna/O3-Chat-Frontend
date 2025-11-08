@@ -94,7 +94,7 @@ const SecondaryHeader = ({ data, menu, menuItems, back, backPress }) => {
         <>
           <Image
             source={{
-              uri: `${apiUrl}/O3-Chat/${
+              uri: `${apiUrl}/o3_chat/${
                 data.image
               }?timestamp=${new Date().getTime()}`,
             }}
@@ -138,7 +138,7 @@ const SecondaryHeader = ({ data, menu, menuItems, back, backPress }) => {
             >
               <Image
                 source={{
-                  uri: `${apiUrl}/O3-Chat/${
+                  uri: `${apiUrl}/o3_chat/${
                     data.image
                   }?timestamp=${new Date().getTime()}`,
                 }}

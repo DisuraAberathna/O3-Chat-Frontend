@@ -50,7 +50,7 @@ const Chat = () => {
           };
 
           try {
-            const response = await fetch(`${apiUrl}/O3-Chat/DeleteChat`, {
+            const response = await fetch(`${apiUrl}/o3_chat/DeleteChat`, {
               method: "POST",
               body: JSON.stringify(reqObject),
               headers: {
@@ -99,7 +99,7 @@ const Chat = () => {
           otherId: id,
         };
 
-        const response = await fetch(`${apiUrl}/O3-Chat/LoadChats`, {
+        const response = await fetch(`${apiUrl}/o3_chat/LoadChats`, {
           method: "POST",
           body: JSON.stringify(reqObject),
           headers: {
@@ -166,7 +166,7 @@ const Chat = () => {
         }
 
         try {
-          const response = await fetch(`${apiUrl}/O3-Chat/SendMessage`, {
+          const response = await fetch(`${apiUrl}/o3_chat/SendMessage`, {
             method: "POST",
             body: form,
           });

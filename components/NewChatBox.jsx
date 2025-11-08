@@ -35,7 +35,7 @@ const NewChatBox = ({ data }) => {
       <>
         <Image
           source={{
-            uri: `${apiUrl}/O3-Chat/${
+            uri: `${apiUrl}/o3_chat/${
               data.image
             }?timestamp=${new Date().getTime()}`,
           }}

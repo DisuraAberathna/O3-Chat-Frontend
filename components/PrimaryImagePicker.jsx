@@ -39,7 +39,7 @@ const PrimaryImagePicker = ({
             source={
               image === null
                 ? {
-                    uri: `${apiUrl}/O3-Chat/${
+                    uri: `${apiUrl}/o3_chat/${
                       user.profile_img
                     }?timestamp=${new Date().getTime()}`,
                   }

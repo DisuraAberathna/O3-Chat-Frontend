@@ -98,7 +98,7 @@ const home = () => {
           searchText: searchText,
         };
 
-        const response = await fetch(`${apiUrl}/O3-Chat/LoadChatList`, {
+        const response = await fetch(`${apiUrl}/o3_chat/LoadChatList`, {
           method: "POST",
           body: JSON.stringify(reqObject),
           headers: {
