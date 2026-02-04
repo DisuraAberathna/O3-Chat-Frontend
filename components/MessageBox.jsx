@@ -33,14 +33,12 @@ const MessageBox = ({ data }) => {
       underlayColor={colorScheme === "dark" ? "#404040" : "#F1F1F1"}
       activeOpacity={0.7}
     >
-      <>
+      <View style={styleSheat.innerView}>
         <Image
           source={{
-            uri: `${apiUrl}/o3_chat/${
-              data.image
-            }?timestamp=${new Date().getTime()}`,
+            uri: `${apiUrl}/o3_chat/${data.image}?v=${data.imageVersion || ""}`,
           }}
-           cachePolicy="none"
+          cachePolicy="none"
           placeholder={{ blurhash }}
           style={[
             styleSheat.profileImage,
@@ -65,11 +63,10 @@ const MessageBox = ({ data }) => {
             <View style={styleSheat.messageView}>
               {data.view && (
                 <Ionicons
-                  name={`${
-                    data.status === 1
-                      ? "checkmark-outline"
-                      : "checkmark-done-outline"
-                  }`}
+                  name={`${data.status === 1
+                    ? "checkmark-outline"
+                    : "checkmark-done-outline"
+                    }`}
                   color={"#15a9f9"}
                   size={14}
                 />
@@ -104,7 +101,7 @@ const MessageBox = ({ data }) => {
             )}
           </View>
         </View>
-      </>
+      </View>
     </TouchableHighlight>
   );
 };
@@ -113,18 +110,20 @@ export default MessageBox;
 
 const styleSheat = StyleSheet.create({
   view: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 16,
     borderRadius: 8,
     marginBottom: 6,
   },
   darkView: {
-    backgroundColor: "#000",
+    backgroundColor: "#000000",
   },
   lightView: {
-    backgroundColor: "#fff",
+    backgroundColor: "#ffffff",
+  },
+  innerView: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 16,
   },
   profileImage: {
     width: 50,
