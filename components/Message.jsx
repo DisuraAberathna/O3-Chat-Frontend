@@ -87,9 +87,7 @@ const Message = ({ data, setReply, setReplyData }) => {
               {data.replyImg && (
                 <Image
                   source={{
-                    uri: `${apiUrl}/o3_chat/${
-                      data.replyImg
-                    }?timestamp=${new Date().getTime()}`,
+                    uri: `${apiUrl}/o3_chat/${data.replyImg}`,
                   }}
                   cachePolicy="none"
                   placeholder={{ blurhash }}
@@ -121,9 +119,7 @@ const Message = ({ data, setReply, setReplyData }) => {
         {data.img && (
           <Image
             source={{
-              uri: `${apiUrl}/o3_chat/${
-                data.img
-              }?timestamp=${new Date().getTime()}`,
+              uri: `${apiUrl}/o3_chat/${data.img}`,
             }}
             cachePolicy="none"
             placeholder={{ blurhash }}
@@ -164,11 +160,10 @@ const Message = ({ data, setReply, setReplyData }) => {
           {data.side === "right" && (
             <>
               <Ionicons
-                name={`${
-                  data.status === 1
+                name={`${data.status === 1
                     ? "checkmark-outline"
                     : "checkmark-done-outline"
-                }`}
+                  }`}
                 color={"#15a9f9"}
                 size={14}
               />
