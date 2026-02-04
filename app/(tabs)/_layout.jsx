@@ -1,11 +1,11 @@
-import {Tabs} from "expo-router";
+import { Tabs } from "expo-router";
 import React from "react";
-import {useColorScheme} from "@/hooks/useColorScheme";
+import { useColorScheme } from "@/hooks/useColorScheme";
 import icons from "@/constants/icons";
-import {StyleSheet, Text, View} from "react-native";
-import {Image} from "expo-image";
+import { StyleSheet, Text, View } from "react-native";
+import { Image } from "expo-image";
 
-const TabIcon = ({icon, color, name, focused}) => {
+const TabIcon = ({ icon, color, name, focused }) => {
     return (
         <View style={styleSheat.view}>
             <Image
@@ -15,10 +15,11 @@ const TabIcon = ({icon, color, name, focused}) => {
                 contentFit="contain"
             />
             <Text
+                numberOfLines={1}
                 style={[
                     styleSheat.iconText,
-                    {color: color},
-                    focused && {fontWeight: "600"},
+                    { color: color },
+                    focused && { fontWeight: "600" },
                 ]}
             >
                 {name}
@@ -29,19 +30,21 @@ const TabIcon = ({icon, color, name, focused}) => {
 
 const styleSheat = StyleSheet.create({
     view: {
-        marginTop: 20,
         alignItems: "center",
         justifyContent: "center",
-        rowGap: 4,
+        width: 80,
+        height: 85,
+        paddingTop: 40,
+        paddingBottom: 10,
     },
     icon: {
-        width: 28,
-        height: 28,
+        width: 26,
+        height: 26,
     },
     iconText: {
         fontSize: 12,
-        lineHeight: 10,
         fontWeight: "500",
+        marginTop: 4,
     },
 });
 
@@ -55,10 +58,11 @@ const TabLayout = () => {
                 tabBarActiveTintColor: "#0C4EAC",
                 tabBarInactiveTintColor: colorScheme === "dark" ? "#FFFFFF" : "#000000",
                 tabBarStyle: {
-                    backgroundColor: colorScheme === "dark" ? "#000000" : "#FFFFFF",
+                    backgroundColor: colorScheme === "dark" ? "#000" : "#FFFFFF",
                     borderTopWidth: 1,
                     borderTopColor: colorScheme === "dark" ? "#0F172A" : "#E2E8F0",
-                    height: 60,
+                    height: 85,
+                    paddingBottom: 0,
                 },
             }}
         >
@@ -67,7 +71,7 @@ const TabLayout = () => {
                 options={{
                     title: "Home",
                     headerShown: false,
-                    tabBarIcon: ({color, focused}) => (
+                    tabBarIcon: ({ color, focused }) => (
                         <TabIcon
                             icon={icons.home}
                             color={color}
@@ -82,7 +86,7 @@ const TabLayout = () => {
                 options={{
                     title: "Profile",
                     headerShown: false,
-                    tabBarIcon: ({color, focused}) => (
+                    tabBarIcon: ({ color, focused }) => (
                         <TabIcon
                             icon={icons.profile}
                             color={color}
