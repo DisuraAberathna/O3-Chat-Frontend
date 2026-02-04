@@ -5,12 +5,12 @@ import PrimaryHeader from "@/components/PrimaryHeader";
 import MessageBox from "@/components/MessageBox";
 import {
   ActivityIndicator,
-  Alert,
   RefreshControl,
   ScrollView,
   Text,
   View,
 } from "react-native";
+import { useAppAlert } from "@/components/AlertProvider";
 import { router } from "expo-router";
 import { StyleSheet } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -23,12 +23,14 @@ import PrimaryButton from "@/components/PrimaryButton";
 const home = () => {
   const colorScheme = useColorScheme();
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+  const { showAlert } = useAppAlert();
 
   const [searchFieldVisibility, setSearchFieldVisibility] = useState(false);
   const [users, setUsers] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [searchText, setSearchText] = useState("");
+  const [imageVersion, setImageVersion] = useState(Date.now());
 
   const menuItems = [
     {
@@ -78,6 +80,7 @@ const home = () => {
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
+    setImageVersion(Date.now());
     loadUsers();
     setRefreshing(false);
   }, []);
@@ -98,7 +101,7 @@ const home = () => {
           searchText: searchText,
         };
 
-        const response = await fetch(`${apiUrl}/o3_chat/LoadChatList`, {
+        const response = await fetch(`${apiUrl}/load-chat-list`, {
           method: "POST",
           body: JSON.stringify(reqObject),
           headers: {
@@ -113,12 +116,13 @@ const home = () => {
             setIsLoaded(true);
             setUsers(data.chatList);
           } else {
-            Alert.alert("Warning", data.msg);
+            showAlert("Warning", data.msg, "warning");
           }
         } else {
-          Alert.alert(
+          showAlert(
             "Error",
-            "Loading failed \nCan not process this request!"
+            "Loading failed \nCan not process this request!",
+            "error"
           );
         }
       } else {
@@ -131,6 +135,7 @@ const home = () => {
 
   return (
     <SafeAreaView
+      edges={["top", "left", "right"]}
       style={
         colorScheme === "dark"
           ? styleSheat.darkMainView
@@ -147,12 +152,15 @@ const home = () => {
         closeOnPress={hideSearch}
         searchOnPress={loadUsers}
       />
-      {isLoaded ? (
-        <ScrollView
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        >
+      <View
+        style={[
+          { flex: 1 },
+          colorScheme === "dark"
+            ? styleSheat.darkContentView
+            : styleSheat.lightContentView,
+        ]}
+      >
+        {isLoaded ? (
           <FlashList
             data={users}
             renderItem={({ item }) => {
@@ -168,12 +176,17 @@ const home = () => {
                     status: item.status,
                     view: item.view,
                     count: item.count,
+                    imageVersion: imageVersion,
                   }}
                 />
               );
             }}
             estimatedItemSize={50}
-            refreshing={true}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
             showsVerticalScrollIndicator={true}
             contentContainerStyle={styleSheat.mainView}
             ListEmptyComponent={
@@ -224,39 +237,41 @@ const home = () => {
                 </View>
               )
             }
+            ListFooterComponent={
+              users.length === 0 && searchText.length !== 0 ? (
+                <View
+                  style={[
+                    {
+                      paddingHorizontal: 12,
+                      paddingVertical: 18,
+                      margin: 12,
+                      borderRadius: 12,
+                      alignItems: "center",
+                    },
+                    colorScheme === "dark"
+                      ? styleSheat.darkView
+                      : styleSheat.lightView,
+                  ]}
+                >
+                  <Text
+                    style={
+                      colorScheme === "dark"
+                        ? styleSheat.darkText
+                        : styleSheat.lightText
+                    }
+                  >
+                    Result not fount for '{searchText}'
+                  </Text>
+                </View>
+              ) : null
+            }
           />
-          {users.length === 0 && searchText.length !== 0 && (
-            <View
-              style={[
-                {
-                  paddingHorizontal: 12,
-                  paddingVertical: 18,
-                  margin: 12,
-                  borderRadius: 12,
-                  alignItems: "center",
-                },
-                colorScheme === "dark"
-                  ? styleSheat.darkView
-                  : styleSheat.lightView,
-              ]}
-            >
-              <Text
-                style={
-                  colorScheme === "dark"
-                    ? styleSheat.darkText
-                    : styleSheat.lightText
-                }
-              >
-                Result not fount for '{searchText}'
-              </Text>
-            </View>
-          )}
-        </ScrollView>
-      ) : (
-        <View style={styleSheat.loadView}>
-          <ActivityIndicator size={"large"} color={"#0C4EAC"} />
-        </View>
-      )}
+        ) : (
+          <View style={styleSheat.loadView}>
+            <ActivityIndicator size={"large"} color={"#0C4EAC"} />
+          </View>
+        )}
+      </View>
     </SafeAreaView>
   );
 };
@@ -266,10 +281,16 @@ export default home;
 const styleSheat = StyleSheet.create({
   darkMainView: {
     flex: 1,
-    backgroundColor: "#111827",
+    backgroundColor: "#000000",
   },
   lightMainView: {
     flex: 1,
+    backgroundColor: "#ffffff",
+  },
+  darkContentView: {
+    backgroundColor: "#111827",
+  },
+  lightContentView: {
     backgroundColor: "#e2e8f0",
   },
   mainView: {
