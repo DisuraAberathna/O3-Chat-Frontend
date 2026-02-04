@@ -1,19 +1,19 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   RefreshControl,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
+  TouchableHighlight,
   View,
 } from "react-native";
+import { useAppAlert } from "@/components/AlertProvider";
 import { SafeAreaView } from "react-native-safe-area-context";
 import SecondaryHeader from "@/components/SecondaryHeader";
 import { router, useLocalSearchParams } from "expo-router";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { TouchableHighlight } from "react-native";
 import { Image } from "expo-image";
 import icons from "@/constants/icons";
 import Message from "../../components/Message";
@@ -26,6 +26,7 @@ const Chat = () => {
   const colorScheme = useColorScheme();
   const { id, name, image, bio } = useLocalSearchParams();
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+  const { showAlert } = useAppAlert();
   const flashListRef = useRef(null);
 
   const [focusedInput, setFocusedInput] = useState(false);
@@ -38,6 +39,7 @@ const Chat = () => {
   const [replyData, setReplyData] = useState({});
   const [isLoaded, setIsLoaded] = useState(false);
   const [load, setLoad] = useState(true);
+  const [imageVersion, setImageVersion] = useState(Date.now());
 
   const menuItems = [
     {
@@ -50,7 +52,7 @@ const Chat = () => {
           };
 
           try {
-            const response = await fetch(`${apiUrl}/o3_chat/DeleteChat`, {
+            const response = await fetch(`${apiUrl}/delete-chat`, {
               method: "POST",
               body: JSON.stringify(reqObject),
               headers: {
@@ -64,12 +66,13 @@ const Chat = () => {
               if (data.ok) {
                 setLoad(true);
               } else {
-                Alert.alert("Warning", data.msg);
+                showAlert("Warning", data.msg, "warning");
               }
             } else {
-              Alert.alert(
+              showAlert(
                 "Error",
-                "Chat deleting failed \nCan not process this request!"
+                "Chat deleting failed \nCan not process this request!",
+                "error"
               );
             }
           } catch (error) {
@@ -99,7 +102,7 @@ const Chat = () => {
           otherId: id,
         };
 
-        const response = await fetch(`${apiUrl}/o3_chat/LoadChats`, {
+        const response = await fetch(`${apiUrl}/load-chats`, {
           method: "POST",
           body: JSON.stringify(reqObject),
           headers: {
@@ -115,12 +118,13 @@ const Chat = () => {
             setIsLoaded(true);
             setLoad(false);
           } else {
-            Alert.alert("Warning", data.msg);
+            showAlert("Warning", data.msg, "warning");
           }
         } else {
-          Alert.alert(
+          showAlert(
             "Error",
-            "Message loading failed \nCan not process this request!"
+            "Message loading failed \nCan not process this request!",
+            "error"
           );
         }
       } else {
@@ -133,7 +137,7 @@ const Chat = () => {
 
   const pickImageFromGallery = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: 'images',
       quality: 0.5,
     });
 
@@ -166,7 +170,7 @@ const Chat = () => {
         }
 
         try {
-          const response = await fetch(`${apiUrl}/o3_chat/SendMessage`, {
+          const response = await fetch(`${apiUrl}/send-message`, {
             method: "POST",
             body: form,
           });
@@ -179,9 +183,10 @@ const Chat = () => {
             setReplyData({});
             setFocusedInput(false);
           } else {
-            Alert.alert(
+            showAlert(
               "Error",
-              "Message sending failed \nCan not process this request!"
+              "Message sending failed \nCan not process this request!",
+              "error"
             );
           }
         } catch (error) {
@@ -195,6 +200,7 @@ const Chat = () => {
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
+    setImageVersion(Date.now());
     loadChats();
     setRefreshing(false);
   }, []);
@@ -221,242 +227,253 @@ const Chat = () => {
         }}
         menu={true}
         menuItems={menuItems}
+        imageVersion={imageVersion}
       />
-      {isLoaded ? (
-        <FlashList
-          ref={flashListRef}
-          data={chats}
-          renderItem={({ item }) => {
-            return (
-              <Message
-                data={{
-                  id: item.id,
-                  fromUser: item.fromUser,
-                  toUser: item.toUser,
-                  img: item.img,
-                  msg: item.msg,
-                  side: item.side,
-                  status: item.status,
-                  time: item.time,
-                  replyMsg: item.replyMsg,
-                  replyUser: item.replyUser,
-                  replyImg: item.replyImg,
-                  replyTime: item.replyTime,
-                }}
-                setReply={setReply}
-                setReplyData={setReplyData}
-              />
-            );
-          }}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-          estimatedItemSize={50}
-          refreshing={refreshing}
-          showsVerticalScrollIndicator={true}
-          contentContainerStyle={styleSheat.mainView}
-          keyExtractor={(item) => item.id}
-          onContentSizeChange={goToBottom}
-          ListEmptyComponent={
-            <View
-              style={[
-                {
-                  paddingHorizontal: 12,
-                  paddingVertical: 24,
-                  margin: 12,
-                  borderRadius: 12,
-                  alignItems: "center",
-                },
-                colorScheme === "dark"
-                  ? styleSheat.darkView
-                  : styleSheat.lightView,
-              ]}
-            >
-              <Image
-                source={icons.emptyChat}
-                style={{
-                  width: 100,
-                  height: 100,
-                  tintColor: colorScheme === "dark" ? "#fff" : "#0C4EAC",
-                }}
-              />
-              <Text
+      <View
+        style={[
+          { flex: 1 },
+          colorScheme === "dark"
+            ? styleSheat.darkContentView
+            : styleSheat.lightContentView,
+        ]}
+      >
+        {isLoaded ? (
+          <FlashList
+            ref={flashListRef}
+            data={chats}
+            renderItem={({ item }) => {
+              return (
+                <Message
+                  data={{
+                    id: item.id,
+                    fromUser: item.fromUser,
+                    toUser: item.toUser,
+                    img: item.img,
+                    msg: item.msg,
+                    side: item.side,
+                    status: item.status,
+                    time: item.time,
+                    replyMsg: item.replyMsg,
+                    replyUser: item.replyUser,
+                    replyImg: item.replyImg,
+                    replyTime: item.replyTime,
+                  }}
+                  setReply={setReply}
+                  setReplyData={setReplyData}
+                />
+              );
+            }}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+            estimatedItemSize={50}
+            refreshing={refreshing}
+            showsVerticalScrollIndicator={true}
+            contentContainerStyle={styleSheat.mainView}
+            keyExtractor={(item) => item.id}
+            onContentSizeChange={goToBottom}
+            ListEmptyComponent={
+              <View
                 style={[
                   {
-                    fontSize: 24,
-                    lineHeight: 28,
-                    fontWeight: "500",
+                    paddingHorizontal: 12,
+                    paddingVertical: 24,
+                    margin: 12,
+                    borderRadius: 12,
+                    alignItems: "center",
                   },
+                  colorScheme === "dark"
+                    ? styleSheat.darkView
+                    : styleSheat.lightView,
+                ]}
+              >
+                <Image
+                  source={icons.emptyChat}
+                  style={{
+                    width: 100,
+                    height: 100,
+                    tintColor: colorScheme === "dark" ? "#fff" : "#0C4EAC",
+                  }}
+                />
+                <Text
+                  style={[
+                    {
+                      fontSize: 24,
+                      lineHeight: 28,
+                      fontWeight: "500",
+                    },
+                    colorScheme === "dark"
+                      ? styleSheat.darkText
+                      : styleSheat.lightText,
+                  ]}
+                >
+                  No Chats Yet
+                </Text>
+              </View>
+            }
+          />
+        ) : (
+          <View style={styleSheat.loadView}>
+            <ActivityIndicator size={"large"} color={"#0C4EAC"} />
+          </View>
+        )}
+        <View
+          style={
+            colorScheme === "dark" ? styleSheat.darkView : styleSheat.lightView
+          }
+        >
+          {reply !== 0 && (
+            <View
+              style={[
+                styleSheat.replyView,
+                colorScheme === "dark"
+                  ? styleSheat.darkBorder
+                  : styleSheat.lightBorder,
+              ]}
+            >
+              <View style={styleSheat.replyInnerView}>
+                <View style={{ flexDirection: "row", columnGap: 8 }}>
+                  <Ionicons
+                    name="arrow-undo"
+                    size={14}
+                    style={
+                      colorScheme === "dark"
+                        ? styleSheat.darkText
+                        : styleSheat.lightText
+                    }
+                  />
+                  <Text
+                    style={
+                      colorScheme === "dark"
+                        ? styleSheat.darkText
+                        : styleSheat.lightText
+                    }
+                  >
+                    Reply
+                  </Text>
+                </View>
+                <TouchableHighlight
+                  underlayColor={colorScheme === "dark" ? "#404040" : "#F1F1F1"}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    setReply(0);
+                  }}
+                  style={styleSheat.closeButton}
+                >
+                  <Image
+                    source={icons.close}
+                    style={{
+                      tintColor: colorScheme === "dark" ? "#fff" : "#0C4EAC",
+                      width: 10,
+                      height: 10,
+                    }}
+                    contentFit="contain"
+                  />
+                </TouchableHighlight>
+              </View>
+              <Text
+                style={
+                  colorScheme === "dark"
+                    ? styleSheat.darkText
+                    : styleSheat.lightText
+                }
+              >
+                {replyData.user}
+              </Text>
+              <Text
+                style={
+                  colorScheme === "dark"
+                    ? styleSheat.darkText
+                    : styleSheat.lightText
+                }
+              >
+                {replyData.msg && `${replyData.msg.substring(0, 50)}...`}
+              </Text>
+            </View>
+          )}
+          {msgImage && (
+            <View style={{ paddingHorizontal: 12, paddingVertical: 8 }}>
+              <View style={{ alignItems: "flex-end" }}>
+                <TouchableHighlight
+                  underlayColor={colorScheme === "dark" ? "#404040" : "#F1F1F1"}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    setMsgImage(null);
+                  }}
+                  style={styleSheat.closeButton}
+                >
+                  <Image
+                    source={icons.close}
+                    style={{
+                      tintColor: colorScheme === "dark" ? "#fff" : "#0C4EAC",
+                      width: 10,
+                      height: 10,
+                    }}
+                    contentFit="contain"
+                  />
+                </TouchableHighlight>
+              </View>
+              <Image
+                source={{ uri: msgImage }}
+                style={{ width: "100%", height: 200 }}
+                contentFit="contain"
+                cachePolicy="none"
+              />
+            </View>
+          )}
+          <View style={styleSheat.messageInputView}>
+            <View
+              style={[
+                colorScheme === "dark"
+                  ? styleSheat.darkBorder
+                  : styleSheat.lightBorder,
+                styleSheat.inputView,
+                focusedInput && styleSheat.focusedInput,
+              ]}
+            >
+              <TextInput
+                style={[
                   colorScheme === "dark"
                     ? styleSheat.darkText
                     : styleSheat.lightText,
+                  styleSheat.input,
                 ]}
-              >
-                No Chats Yet
-              </Text>
-            </View>
-          }
-        />
-      ) : (
-        <View style={styleSheat.loadView}>
-          <ActivityIndicator size={"large"} color={"#0C4EAC"} />
-        </View>
-      )}
-      <View
-        style={
-          colorScheme === "dark" ? styleSheat.darkView : styleSheat.lightView
-        }
-      >
-        {reply !== 0 && (
-          <View
-            style={[
-              styleSheat.replyView,
-              colorScheme === "dark"
-                ? styleSheat.darkBorder
-                : styleSheat.lightBorder,
-            ]}
-          >
-            <View style={styleSheat.replyInnerView}>
-              <View style={{ flexDirection: "row", columnGap: 8 }}>
-                <Ionicons
-                  name="arrow-undo"
-                  size={14}
-                  style={
-                    colorScheme === "dark"
-                      ? styleSheat.darkText
-                      : styleSheat.lightText
-                  }
-                />
-                <Text
-                  style={
-                    colorScheme === "dark"
-                      ? styleSheat.darkText
-                      : styleSheat.lightText
-                  }
-                >
-                  Reply
-                </Text>
-              </View>
+                placeholder="Message"
+                placeholderTextColor="#7b7b8b"
+                underlineColorAndroid="transparent"
+                onFocus={() => setFocusedInput(true)}
+                onBlur={() => setFocusedInput(false)}
+                value={message}
+                onChangeText={setMessage}
+              />
               <TouchableHighlight
-                underlayColor={colorScheme === "dark" ? "#404040" : "#F1F1F1"}
+                style={styleSheat.imageButton}
+                onPress={pickImageFromGallery}
                 activeOpacity={0.7}
-                onPress={() => {
-                  setReply(0);
-                }}
-                style={styleSheat.closeButton}
+                underlayColor={colorScheme === "dark" ? "#404040" : "#F1F1F1"}
               >
                 <Image
-                  source={icons.close}
-                  style={{
-                    tintColor: colorScheme === "dark" ? "#fff" : "#0C4EAC",
-                    width: 10,
-                    height: 10,
-                  }}
+                  source={icons.clip}
+                  style={[
+                    styleSheat.clipIcon,
+                    { tintColor: colorScheme === "dark" ? "#fff" : "#0C4EAC" },
+                  ]}
                   contentFit="contain"
                 />
               </TouchableHighlight>
             </View>
-            <Text
-              style={
-                colorScheme === "dark"
-                  ? styleSheat.darkText
-                  : styleSheat.lightText
-              }
-            >
-              {replyData.user}
-            </Text>
-            <Text
-              style={
-                colorScheme === "dark"
-                  ? styleSheat.darkText
-                  : styleSheat.lightText
-              }
-            >
-              {replyData.msg && `${replyData.msg.substring(0, 50)}...`}
-            </Text>
-          </View>
-        )}
-        {msgImage && (
-          <View style={{ paddingHorizontal: 12, paddingVertical: 8 }}>
-            <View style={{ alignItems: "flex-end" }}>
-              <TouchableHighlight
-                underlayColor={colorScheme === "dark" ? "#404040" : "#F1F1F1"}
-                activeOpacity={0.7}
-                onPress={() => {
-                  setMsgImage(null);
-                }}
-                style={styleSheat.closeButton}
-              >
-                <Image
-                  source={icons.close}
-                  style={{
-                    tintColor: colorScheme === "dark" ? "#fff" : "#0C4EAC",
-                    width: 10,
-                    height: 10,
-                  }}
-                  contentFit="contain"
-                />
-              </TouchableHighlight>
-            </View>
-            <Image
-              source={{ uri: msgImage }}
-              style={{ width: "100%", height: 200 }}
-              contentFit="contain"
-              cachePolicy="none"
-            />
-          </View>
-        )}
-        <View style={styleSheat.messageInputView}>
-          <View
-            style={[
-              colorScheme === "dark"
-                ? styleSheat.darkBorder
-                : styleSheat.lightBorder,
-              styleSheat.inputView,
-              focusedInput && styleSheat.focusedInput,
-            ]}
-          >
-            <TextInput
-              style={[
-                colorScheme === "dark"
-                  ? styleSheat.darkText
-                  : styleSheat.lightText,
-                styleSheat.input,
-              ]}
-              placeholder="Message"
-              placeholderTextColor="#7b7b8b"
-              onFocus={() => setFocusedInput(true)}
-              onBlur={() => setFocusedInput(false)}
-              value={message}
-              onChangeText={setMessage}
-            />
-            <TouchableHighlight
-              style={styleSheat.imageButton}
-              onPress={pickImageFromGallery}
+            <TouchableOpacity
+              style={styleSheat.messageButton}
               activeOpacity={0.7}
-              underlayColor={colorScheme === "dark" ? "#404040" : "#F1F1F1"}
+              onPress={sendMessage}
             >
               <Image
-                source={icons.clip}
-                style={[
-                  styleSheat.clipIcon,
-                  { tintColor: colorScheme === "dark" ? "#fff" : "#0C4EAC" },
-                ]}
+                source={icons.send}
+                style={styleSheat.sendIcon}
                 contentFit="contain"
               />
-            </TouchableHighlight>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            style={styleSheat.messageButton}
-            activeOpacity={0.7}
-            onPress={sendMessage}
-          >
-            <Image
-              source={icons.send}
-              style={styleSheat.sendIcon}
-              contentFit="contain"
-            />
-          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
@@ -468,9 +485,17 @@ export default Chat;
 const styleSheat = StyleSheet.create({
   darkMainView: {
     flex: 1,
-    backgroundColor: "#111827",
+    backgroundColor: "#000000",
   },
   lightMainView: {
+    flex: 1,
+    backgroundColor: "#ffffff",
+  },
+  darkContentView: {
+    flex: 1,
+    backgroundColor: "#111827",
+  },
+  lightContentView: {
     flex: 1,
     backgroundColor: "#e2e8f0",
   },
