@@ -144,59 +144,66 @@ const Help = () => {
         menu={true}
         menuItems={MenuItems}
       />
-      <ScrollView>
-        {fqas.map((item, index) => (
-          <View
-            key={index}
-            style={[
-              styleSheat.mainView,
-              colorScheme === "dark"
-                ? styleSheat.darkView
-                : styleSheat.lightView,
-            ]}
-          >
-            <TouchableHighlight
-              activeOpacity={0.8}
-              style={styleSheat.questionButton}
-              underlayColor={colorScheme === "dark" ? "#404040" : "#F1F1F1"}
-              onPress={() => {
-                if (idx === index && visibility === true) {
-                  setVisibility(false);
-                  setIdx();
-                } else {
-                  setVisibility(true);
-                  setIdx(index);
-                }
-              }}
+      <View
+        style={[
+          { flex: 1 },
+          colorScheme === "dark" ? styleSheat.darkContentView : styleSheat.lightContentView,
+        ]}
+      >
+        <ScrollView>
+          {fqas.map((item, index) => (
+            <View
+              key={index}
+              style={[
+                styleSheat.mainView,
+                colorScheme === "dark"
+                  ? styleSheat.darkView
+                  : styleSheat.lightView,
+              ]}
             >
-              <>
-                <Text
-                  style={[
-                    styleSheat.question,
-                    colorScheme === "dark"
-                      ? styleSheat.darkText
-                      : styleSheat.lightText,
-                  ]}
-                >
-                  {item.question}
-                </Text>
-                <Image
-                  source={
-                    idx === index && visibility === true
-                      ? icons.minus
-                      : icons.plus
+              <TouchableHighlight
+                activeOpacity={0.8}
+                style={styleSheat.questionButton}
+                underlayColor={colorScheme === "dark" ? "#404040" : "#F1F1F1"}
+                onPress={() => {
+                  if (idx === index && visibility === true) {
+                    setVisibility(false);
+                    setIdx();
+                  } else {
+                    setVisibility(true);
+                    setIdx(index);
                   }
-                  style={[
-                    styleSheat.icon,
-                    { tintColor: colorScheme === "dark" && "#fff" },
-                  ]}
-                />
-              </>
-            </TouchableHighlight>
-            {visibility && <AnswerView text={item.answer} index={index} />}
-          </View>
-        ))}
-      </ScrollView>
+                }}
+              >
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                  <Text
+                    style={[
+                      styleSheat.question,
+                      colorScheme === "dark"
+                        ? styleSheat.darkText
+                        : styleSheat.lightText,
+                    ]}
+                  >
+                    {item.question}
+                  </Text>
+                  <Image
+                    source={
+                      idx === index && visibility === true
+                        ? icons.minus
+                        : icons.plus
+                    }
+                    style={[
+                      styleSheat.icon,
+                      { tintColor: colorScheme === "dark" && "#fff" },
+                    ]}
+                  />
+                </View>
+              </TouchableHighlight>
+              {visibility && <AnswerView text={item.answer} index={index} />}
+            </View>
+          ))}
+        </ScrollView>
+      </View>
     </SafeAreaView>
   );
 };
@@ -206,11 +213,17 @@ export default Help;
 const styleSheat = StyleSheet.create({
   darkMainView: {
     flex: 1,
-    backgroundColor: "#111827",
-    paddingBottom: 8,
+    backgroundColor: "#000000",
   },
   lightMainView: {
     flex: 1,
+    backgroundColor: "#ffffff",
+  },
+  darkContentView: {
+    backgroundColor: "#111827",
+    paddingBottom: 8,
+  },
+  lightContentView: {
     backgroundColor: "#e2e8f0",
   },
   darkView: {
