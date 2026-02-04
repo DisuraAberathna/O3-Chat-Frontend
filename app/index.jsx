@@ -31,44 +31,44 @@ const index = () => {
   };
 
   return (
-    <>
-      <SafeAreaView
-        style={
-          colorScheme === "dark" ? styleSheat.darkView : styleSheat.lightView
-        }
-      >
-        <ScrollView contentContainerStyle={{ minHeight: "100%" }}>
-          <View style={styleSheat.mainView}>
-            <View style={styleSheat.logoView}>
-              <Image
-                source={images.logo}
-                style={styleSheat.logo}
-                contentFit="contain"
-              />
-              <View style={styleSheat.welcomeTextView}>
-                <Text
-                  style={[
-                    styleSheat.welcomeText,
-                    colorScheme === "dark"
-                      ? styleSheat.darkText
-                      : styleSheat.lightText,
-                  ]}
-                >
-                  Welcome to <Text style={styleSheat.snap}>O3 Chat</Text>
-                </Text>
-                <Text
-                  style={[
-                    styleSheat.subText,
-                    colorScheme === "dark"
-                      ? styleSheat.darkText
-                      : styleSheat.lightText,
-                  ]}
-                >
-                  Simply chat with click{" "}
-                  <Text style={styleSheat.boldText}>Continue</Text>.
-                </Text>
-              </View>
+    <SafeAreaView
+      style={
+        colorScheme === "dark" ? styleSheat.darkView : styleSheat.lightView
+      }
+    >
+      <ScrollView contentContainerStyle={{ minHeight: "100%" }}>
+        <View style={styleSheat.mainView}>
+          <View style={styleSheat.logoView}>
+            <Image
+              source={images.logo}
+              style={styleSheat.logo}
+              contentFit="contain"
+            />
+            <View style={styleSheat.welcomeTextView}>
+              <Text
+                style={[
+                  styleSheat.welcomeText,
+                  colorScheme === "dark"
+                    ? styleSheat.darkText
+                    : styleSheat.lightText,
+                ]}
+              >
+                Welcome to <Text style={styleSheat.snap}>O3 Chat</Text>
+              </Text>
+              <Text
+                style={[
+                  styleSheat.subText,
+                  colorScheme === "dark"
+                    ? styleSheat.darkText
+                    : styleSheat.lightText,
+                ]}
+              >
+                Simply chat with click{" "}
+                <Text style={styleSheat.boldText}>Continue</Text>.
+              </Text>
             </View>
+          </View>
+          <View style={{ paddingBottom: 50, width: "100%" }}>
             <PrimaryButton
               title={isProcessing ? "Processing..." : "Continue"}
               handlePress={submit}
@@ -77,9 +77,9 @@ const index = () => {
               isLoading={isProcessing}
             />
           </View>
-        </ScrollView>
-      </SafeAreaView>
-    </>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
@@ -88,7 +88,7 @@ export default index;
 const styleSheat = StyleSheet.create({
   darkView: {
     flex: 1,
-    backgroundColor: "#111827",
+    backgroundColor: "#000000",
   },
   lightView: {
     flex: 1,
