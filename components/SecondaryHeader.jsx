@@ -11,7 +11,7 @@ import {
 import icons from "@/constants/icons";
 import { useColorScheme } from "@/hooks/useColorScheme";
 
-const SecondaryHeader = ({ data, menu, menuItems, back, backPress }) => {
+const SecondaryHeader = ({ data, menu, menuItems, back, backPress, imageVersion }) => {
   const colorScheme = useColorScheme();
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
@@ -94,11 +94,9 @@ const SecondaryHeader = ({ data, menu, menuItems, back, backPress }) => {
         <>
           <Image
             source={{
-              uri: `${apiUrl}/o3_chat/${
-                data.image
-              }?timestamp=${new Date().getTime()}`,
+              uri: `${apiUrl}/o3_chat/${data.image}?v=${imageVersion || ""}`,
             }}
-             cachePolicy="none"
+            cachePolicy="none"
             placeholder={{ blurhash }}
             style={[
               styleSheat.profileImage,
@@ -138,11 +136,9 @@ const SecondaryHeader = ({ data, menu, menuItems, back, backPress }) => {
             >
               <Image
                 source={{
-                  uri: `${apiUrl}/o3_chat/${
-                    data.image
-                  }?timestamp=${new Date().getTime()}`,
+                  uri: `${apiUrl}/o3_chat/${data.image}?v=${imageVersion || ""}`,
                 }}
-                 cachePolicy="none"
+                cachePolicy="none"
                 placeholder={{ blurhash }}
                 style={[
                   styleSheat.modalImage,
@@ -230,12 +226,12 @@ export default SecondaryHeader;
 
 const styleSheat = StyleSheet.create({
   darkView: {
-    backgroundColor: "#000",
+    backgroundColor: "#000000",
     borderColor: "#0f172a",
   },
   lightView: {
-    backgroundColor: "#fff",
-    borderColor: "#e2e8f0",
+    backgroundColor: "#ffffff",
+    borderColor: "#cbd5e1",
   },
   darkText: {
     color: "#f1f5f9",
@@ -246,7 +242,7 @@ const styleSheat = StyleSheet.create({
   view: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space",
+    justifyContent: "space-between",
     paddingHorizontal: 12,
     borderBottomWidth: 2,
   },
