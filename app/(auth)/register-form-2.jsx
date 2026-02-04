@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useAppAlert } from "@/components/AlertProvider";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import PrimaryInput from "@/components/PrimaryInput";
@@ -16,6 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 const registerForm2 = () => {
   const colorScheme = useColorScheme();
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+  const { showAlert } = useAppAlert();
 
   const [image, setImage] = useState(null);
   const [mobile, setMobile] = useState("");
@@ -28,28 +30,30 @@ const registerForm2 = () => {
 
   const submit = async () => {
     if (image === null) {
-      Alert.alert("Warning", "Please select a profile picture!");
+      showAlert("Warning", "Please select a profile picture!", "warning");
     } else if (mobile.length === 0) {
-      Alert.alert("Warning", "Please enter your mobile number!");
+      showAlert("Warning", "Please enter your mobile number!", "warning");
     } else if (!validateMobile(mobile)) {
-      Alert.alert("Warning", "Please enter valid mobile number! \n07********");
+      showAlert("Warning", "Please enter valid mobile number! \n07********", "warning");
     } else if (username.length === 0) {
-      Alert.alert("Warning", "Please enter your username!");
+      showAlert("Warning", "Please enter your username!", "warning");
     } else if (username.length < 3) {
-      Alert.alert("Warning", "Your username must have more than 3 characters!");
+      showAlert("Warning", "Your username must have more than 3 characters!", "warning");
     } else if (username.length > 20) {
-      Alert.alert(
+      showAlert(
         "Warning",
-        "Your username has exceeded the maximum character limit!"
+        "Your username has exceeded the maximum character limit!",
+        "warning"
       );
     } else if (email.length === 0) {
-      Alert.alert("Warning", "Please enter your email!");
+      showAlert("Warning", "Please enter your email!", "warning");
     } else if (!validateEmail(email)) {
-      Alert.alert("Warning", "Please enter valid email!");
+      showAlert("Warning", "Please enter valid email!", "warning");
     } else if (email.length > 100) {
-      Alert.alert(
+      showAlert(
         "Warning",
-        "Your email has exceeded the maximum character limit!"
+        "Your email has exceeded the maximum character limit!",
+        "warning"
       );
     } else {
       setIsProcessing(true);
@@ -72,13 +76,17 @@ const registerForm2 = () => {
           form.append("username", username);
           form.append("email", email);
 
-          const response = await fetch(`${apiUrl}/o3_chat/Register`, {
+          console.log("Sending Register request to:", `${apiUrl}/register`);
+          const response = await fetch(`${apiUrl}/register`, {
             method: "POST",
             body: form,
           });
 
+          console.log("Register response status:", response.status);
+
           if (response.ok) {
             const data = await response.json();
+            console.log("Register response data:", data);
 
             if (data.ok) {
               await AsyncStorage.removeItem("new-user");
@@ -92,28 +100,25 @@ const registerForm2 = () => {
                 JSON.stringify(user)
               );
 
-              Alert.alert(
+              showAlert(
                 "Information",
-                "Verification code send to your email!",
-                [
-                  {
-                    text: "OK",
-                    onPress: () => {
-                      router.replace({
-                        pathname: "verify",
-                        params: { timer: false },
-                      });
-                    },
-                  },
-                ]
+                "Verification code sent to your email!",
+                "success"
               );
+
+              router.replace({
+                pathname: "verify",
+                params: { timer: false },
+              });
             } else {
-              Alert.alert("Warning", data.msg);
+              showAlert("Warning", data.msg, "warning");
             }
           } else {
-            Alert.alert(
+            console.log("Register response error text:", await response.text());
+            showAlert(
               "Error",
-              "Registration failed \nCan not process this request!"
+              "Registration failed \nCan not process this request!",
+              "error"
             );
             setIsProcessing(false);
           }
@@ -121,7 +126,8 @@ const registerForm2 = () => {
           router.push("register-form-1");
         }
       } catch (error) {
-        console.error(error);
+        console.error("Registration Request Error:", error);
+        showAlert("Error", `An unexpected error occurred: ${error.message}`, "error");
       } finally {
         setIsProcessing(false);
       }
@@ -134,87 +140,92 @@ const registerForm2 = () => {
         colorScheme === "dark" ? styleSheat.darkView : styleSheat.lightView
       }
     >
-      <ScrollView contentContainerStyle={{ minHeight: "100%" }}>
-        <View style={styleSheat.mainView}>
-          <View style={styleSheat.linkView}>
-            <Link href="/register-form-1" style={styleSheat.link}>
-              <Ionicons name="chevron-back-outline" size={12} />
-              Back
-            </Link>
-          </View>
-          <View style={styleSheat.logoView}>
-            <Image
-              source={images.logo}
-              style={styleSheat.logo}
-              contentFit="contain"
-            />
-            <Text
-              style={[
-                styleSheat.snap,
-                colorScheme === "dark"
-                  ? styleSheat.darkText
-                  : styleSheat.lightText,
-                { fontSize: 36, lineHeight: 40 },
-              ]}
-            >
-              O3 Chat
-            </Text>
-          </View>
-          <View style={styleSheat.inputView}>
-            <View style={{ width: "100%", alignItems: "center" }}>
-              <PrimaryImagePicker
-                image={image}
-                title={"Profile Picture"}
-                user={null}
-                setTitle={setTitle}
-                setValue={setValue}
-                setBottomSheetVisibility={setBottomSheetVisibility}
-                bottomSheetVisibility={bottomSheetVisibility}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          <View style={styleSheat.mainView}>
+            <View style={styleSheat.linkView}>
+              <Link href="/register-form-1" style={styleSheat.link}>
+                <Ionicons name="chevron-back-outline" size={12} />
+                Back
+              </Link>
+            </View>
+            <View style={styleSheat.logoView}>
+              <Image
+                source={images.logo}
+                style={styleSheat.logo}
+                contentFit="contain"
+              />
+              <Text
+                style={[
+                  styleSheat.snap,
+                  colorScheme === "dark"
+                    ? styleSheat.darkText
+                    : styleSheat.lightText,
+                  { fontSize: 36, lineHeight: 40 },
+                ]}
+              >
+                O3 Chat
+              </Text>
+            </View>
+            <View style={styleSheat.inputView}>
+              <View style={{ width: "100%", alignItems: "center" }}>
+                <PrimaryImagePicker
+                  image={image}
+                  title={"Profile Picture"}
+                  user={null}
+                  setTitle={setTitle}
+                  setValue={setValue}
+                  setBottomSheetVisibility={setBottomSheetVisibility}
+                  bottomSheetVisibility={bottomSheetVisibility}
+                />
+              </View>
+              <PrimaryInput
+                title="Mobile Number"
+                titleStyles={styleSheat.inputTitle}
+                otherStyles={styleSheat.input}
+                keyboardType="number-pad"
+                maxLength={10}
+                handleChangeText={setMobile}
+                value={mobile}
+              />
+              <PrimaryInput
+                title="Username"
+                titleStyles={styleSheat.inputTitle}
+                otherStyles={styleSheat.input}
+                handleChangeText={setUsername}
+                value={username}
+                maxLength={20}
+              />
+              <PrimaryInput
+                title="Email"
+                titleStyles={styleSheat.inputTitle}
+                otherStyles={styleSheat.input}
+                handleChangeText={setEmail}
+                value={email}
+                keyboardType="email-address"
+                maxLength={100}
+              />
+              <PrimaryButton
+                title={isProcessing ? "Processing..." : "Register"}
+                containerStyles={styleSheat.button}
+                textStyles={styleSheat.buttonText}
+                handlePress={submit}
+                isLoading={isProcessing}
               />
             </View>
-            <PrimaryInput
-              title="Mobile Number"
-              titleStyles={styleSheat.inputTitle}
-              otherStyles={styleSheat.input}
-              keyboardType="number-pad"
-              maxLength={10}
-              handleChangeText={setMobile}
-              value={mobile}
-            />
-            <PrimaryInput
-              title="Username"
-              titleStyles={styleSheat.inputTitle}
-              otherStyles={styleSheat.input}
-              handleChangeText={setUsername}
-              value={username}
-              maxLength={20}
-            />
-            <PrimaryInput
-              title="Email"
-              titleStyles={styleSheat.inputTitle}
-              otherStyles={styleSheat.input}
-              handleChangeText={setEmail}
-              value={email}
-              keyboardType="email-address"
-              maxLength={100}
-            />
-            <PrimaryButton
-              title={isProcessing ? "Processing..." : "Register"}
-              containerStyles={styleSheat.button}
-              textStyles={styleSheat.buttonText}
-              handlePress={submit}
-              isLoading={isProcessing}
+            <BottomSheet
+              visibility={bottomSheetVisibility}
+              setVisibility={setBottomSheetVisibility}
+              setImage={setImage}
+              title={title}
+              value={value}
             />
           </View>
-          <BottomSheet
-            visibility={bottomSheetVisibility}
-            setVisibility={setBottomSheetVisibility}
-            setImage={setImage}
-            title={title}
-            value={value}
-          />
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
