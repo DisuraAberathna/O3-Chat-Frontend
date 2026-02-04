@@ -32,12 +32,10 @@ const NewChatBox = ({ data }) => {
       underlayColor={colorScheme === "dark" ? "#404040" : "#F1F1F1"}
       activeOpacity={0.7}
     >
-      <>
+      <View style={styleSheat.innerView}>
         <Image
           source={{
-            uri: `${apiUrl}/o3_chat/${
-              data.image
-            }?timestamp=${new Date().getTime()}`,
+            uri: `${apiUrl}/o3_chat/${data.image}?v=${data.imageVersion || ""}`,
           }}
           cachePolicy="none"
           placeholder={{ blurhash }}
@@ -73,7 +71,7 @@ const NewChatBox = ({ data }) => {
             </Text>
           </View>
         </View>
-      </>
+      </View>
     </TouchableHighlight>
   );
 };
@@ -82,18 +80,20 @@ export default NewChatBox;
 
 const styleSheat = StyleSheet.create({
   view: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 16,
     borderRadius: 8,
     marginBottom: 6,
   },
   darkView: {
-    backgroundColor: "#000",
+    backgroundColor: "#000000",
   },
   lightView: {
-    backgroundColor: "#fff",
+    backgroundColor: "#ffffff",
+  },
+  innerView: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 16,
   },
   profileImage: {
     width: 50,
