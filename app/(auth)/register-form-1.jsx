@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useState } from "react";
-import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useAppAlert } from "@/components/AlertProvider";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import PrimaryInput from "@/components/PrimaryInput";
@@ -12,6 +13,7 @@ import { containsNumbers, validatePassword } from "@/hooks/validation";
 
 const registerForm1 = () => {
   const colorScheme = useColorScheme();
+  const { showAlert } = useAppAlert();
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -34,44 +36,49 @@ const registerForm1 = () => {
 
   const submit = async () => {
     if (firstName.length === 0) {
-      Alert.alert("Warning", "Please enter your first name!");
+      showAlert("Warning", "Please enter your first name!", "warning");
     } else if (firstName.length < 3) {
-      Alert.alert(
+      showAlert(
         "Warning",
-        "Your first name must have more than 3 characters!"
+        "Your first name must have more than 3 characters!",
+        "warning"
       );
     } else if (firstName.length > 50) {
-      Alert.alert(
+      showAlert(
         "Warning",
-        "Your first name has exceeded the maximum character limit!"
+        "Your first name has exceeded the maximum character limit!",
+        "warning"
       );
     } else if (containsNumbers(firstName)) {
-      Alert.alert("Warning", "Your first name can not has numbers!");
+      showAlert("Warning", "Your first name can not has numbers!", "warning");
     } else if (lastName.length === 0) {
-      Alert.alert("Warning", "Please enter your last name!");
+      showAlert("Warning", "Please enter your last name!", "warning");
     } else if (lastName.length < 3) {
-      Alert.alert(
+      showAlert(
         "Warning",
-        "Your last name must have more than 3 characters!"
+        "Your last name must have more than 3 characters!",
+        "warning"
       );
     } else if (lastName.length > 50) {
-      Alert.alert(
+      showAlert(
         "Warning",
-        "Your last name has exceeded the maximum character limit!"
+        "Your last name has exceeded the maximum character limit!",
+        "warning"
       );
     } else if (containsNumbers(lastName)) {
-      Alert.alert("Warning", "Your last name can not has numbers!");
+      showAlert("Warning", "Your last name can not has numbers!", "warning");
     } else if (password.length === 0) {
-      Alert.alert("Warning", "Please enter your password!");
+      showAlert("Warning", "Please enter your password!", "warning");
     } else if (password.length < 5) {
-      Alert.alert("Warning", "Your password must have more than 5 characters!");
+      showAlert("Warning", "Your password must have more than 5 characters!", "warning");
     } else if (password.length > 20) {
-      Alert.alert(
+      showAlert(
         "Warning",
-        "Your password has exceeded the maximum character limit!"
+        "Your password has exceeded the maximum character limit!",
+        "warning"
       );
     } else if (!validatePassword(password)) {
-      Alert.alert("Warning", "Please add a strong password!");
+      showAlert("Warning", "Please add a strong password!", "warning");
     } else {
       setIsProcessing(true);
 
@@ -86,7 +93,7 @@ const registerForm1 = () => {
         await AsyncStorage.removeItem("remember-me");
         router.replace("register-form-2");
       } catch (error) {
-        Alert.alert("Error", error);
+        showAlert("Error", error.toString(), "error");
       }
       setIsProcessing(false);
     }
@@ -98,86 +105,91 @@ const registerForm1 = () => {
         colorScheme === "dark" ? styleSheat.darkView : styleSheat.lightView
       }
     >
-      <ScrollView contentContainerStyle={{ height: "100%" }}>
-        <View style={styleSheat.mainView}>
-          <View style={styleSheat.logoView}>
-            <Image
-              source={images.logo}
-              style={styleSheat.logo}
-              contentFit="contain"
-            />
-            <Text
-              style={[
-                styleSheat.snap,
-                colorScheme === "dark"
-                  ? styleSheat.darkText
-                  : styleSheat.lightText,
-                { fontSize: 36, lineHeight: 40 },
-              ]}
-            >
-              O3 Chat
-            </Text>
-          </View>
-          <View style={styleSheat.inputView}>
-            <Text
-              style={[
-                styleSheat.title,
-                colorScheme === "dark"
-                  ? styleSheat.darkText
-                  : styleSheat.lightText,
-              ]}
-            >
-              Register to <Text style={styleSheat.snap}>O3 Chat</Text>
-            </Text>
-            <PrimaryInput
-              title="First Name"
-              titleStyles={styleSheat.inputTitle}
-              otherStyles={styleSheat.input}
-              handleChangeText={setFirstName}
-              value={firstName}
-              maxLength={50}
-            />
-            <PrimaryInput
-              title="Last Name"
-              titleStyles={styleSheat.inputTitle}
-              otherStyles={styleSheat.input}
-              handleChangeText={setLastName}
-              value={lastName}
-              maxLength={50}
-            />
-            <PrimaryInput
-              title="Password"
-              titleStyles={styleSheat.inputTitle}
-              otherStyles={styleSheat.input}
-              maxLength={20}
-              handleChangeText={setPassword}
-              value={password}
-            />
-            <PrimaryButton
-              title={isProcessing ? "Processing..." : "Continue"}
-              containerStyles={styleSheat.button}
-              textStyles={styleSheat.buttonText}
-              handlePress={submit}
-              isLoading={isProcessing}
-            />
-            <View style={styleSheat.linkView}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          <View style={styleSheat.mainView}>
+            <View style={styleSheat.logoView}>
+              <Image
+                source={images.logo}
+                style={styleSheat.logo}
+                contentFit="contain"
+              />
               <Text
                 style={[
-                  styleSheat.textLg,
+                  styleSheat.snap,
+                  colorScheme === "dark"
+                    ? styleSheat.darkText
+                    : styleSheat.lightText,
+                  { fontSize: 36, lineHeight: 40 },
+                ]}
+              >
+                O3 Chat
+              </Text>
+            </View>
+            <View style={styleSheat.inputView}>
+              <Text
+                style={[
+                  styleSheat.title,
                   colorScheme === "dark"
                     ? styleSheat.darkText
                     : styleSheat.lightText,
                 ]}
               >
-                Already have an account?
+                Register to <Text style={styleSheat.snap}>O3 Chat</Text>
               </Text>
-              <Link href="sign-in" style={styleSheat.link}>
-                Sign In
-              </Link>
+              <PrimaryInput
+                title="First Name"
+                titleStyles={styleSheat.inputTitle}
+                otherStyles={styleSheat.input}
+                handleChangeText={setFirstName}
+                value={firstName}
+                maxLength={50}
+              />
+              <PrimaryInput
+                title="Last Name"
+                titleStyles={styleSheat.inputTitle}
+                otherStyles={styleSheat.input}
+                handleChangeText={setLastName}
+                value={lastName}
+                maxLength={50}
+              />
+              <PrimaryInput
+                title="Password"
+                titleStyles={styleSheat.inputTitle}
+                otherStyles={styleSheat.input}
+                maxLength={20}
+                handleChangeText={setPassword}
+                value={password}
+              />
+              <PrimaryButton
+                title={isProcessing ? "Processing..." : "Continue"}
+                containerStyles={styleSheat.button}
+                textStyles={styleSheat.buttonText}
+                handlePress={submit}
+                isLoading={isProcessing}
+              />
+              <View style={styleSheat.linkView}>
+                <Text
+                  style={[
+                    styleSheat.textLg,
+                    colorScheme === "dark"
+                      ? styleSheat.darkText
+                      : styleSheat.lightText,
+                  ]}
+                >
+                  Already have an account?
+                </Text>
+                <Link href="sign-in" style={styleSheat.link}>
+                  Sign In
+                </Link>
+              </View>
             </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
