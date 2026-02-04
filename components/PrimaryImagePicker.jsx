@@ -12,6 +12,7 @@ const PrimaryImagePicker = ({
   bottomSheetVisibility,
   setBottomSheetVisibility,
   user,
+  imageVersion,
 }) => {
   const colorScheme = useColorScheme();
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
@@ -39,14 +40,12 @@ const PrimaryImagePicker = ({
             source={
               image === null
                 ? {
-                    uri: `${apiUrl}/o3_chat/${
-                      user.profile_img
-                    }?timestamp=${new Date().getTime()}`,
-                  }
+                  uri: `${apiUrl}/o3_chat/${user.profile_img}?v=${imageVersion || ""}`,
+                }
                 : { uri: image }
             }
             placeholder={{ blurhash }}
-             cachePolicy="none"
+            cachePolicy="none"
             style={[
               image === null
                 ? { width: 144, height: 144 }
@@ -62,10 +61,10 @@ const PrimaryImagePicker = ({
           style={[
             image === null
               ? {
-                  width: 80,
-                  height: 80,
-                  tintColor: colorScheme === "dark" ? "#fff" : "#0C4EAC",
-                }
+                width: 80,
+                height: 80,
+                tintColor: colorScheme === "dark" ? "#fff" : "#0C4EAC",
+              }
               : { width: 150, height: 150, borderRadius: 9999 },
           ]}
           contentFit="contain"
