@@ -1,5 +1,6 @@
 import React from "react";
-import { Alert, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { useAppAlert } from "./AlertProvider";
 import PrimaryInput from "./PrimaryInput";
 import { useState } from "react";
 import PrimaryButton from "./PrimaryButton";
@@ -9,6 +10,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const UpdatePassword = ({ user }) => {
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+  const { showAlert } = useAppAlert();
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -16,18 +18,19 @@ const UpdatePassword = ({ user }) => {
 
   const habndlePress = async () => {
     if (newPassword.length === 0) {
-      Alert.alert("Warning", "Please enter your password!");
+      showAlert("Warning", "Please enter your password!", "warning");
     } else if (newPassword.length < 5) {
-      Alert.alert("Warning", "Your password must have more than 5 characters!");
+      showAlert("Warning", "Your password must have more than 5 characters!", "warning");
     } else if (newPassword.length > 20) {
-      Alert.alert(
+      showAlert(
         "Warning",
-        "Your password has exceeded the maximum character limit!"
+        "Your password has exceeded the maximum character limit!",
+        "warning"
       );
     } else if (!validatePassword(newPassword)) {
-      Alert.alert("Warning", "Please add a strong password!");
+      showAlert("Warning", "Please add a strong password!", "warning");
     } else if (newPassword !== confirmPassword) {
-      Alert.alert("Warning", "Password mismatched!");
+      showAlert("Warning", "Password mismatched!", "warning");
     } else {
       setIsProcessing(true);
 
@@ -38,7 +41,7 @@ const UpdatePassword = ({ user }) => {
       };
 
       try {
-        const response = await fetch(`${apiUrl}/o3_chat/UpdatePaasword`, {
+        const response = await fetch(`${apiUrl}/update-password`, {
           method: "POST",
           body: JSON.stringify(reqObject),
           headers: {
@@ -56,24 +59,20 @@ const UpdatePassword = ({ user }) => {
             );
             await AsyncStorage.removeItem("user");
 
-            Alert.alert("Information", "Verify it's you!", [
-              {
-                text: "OK",
-                onPress: () => {
-                  router.replace({
-                    pathname: "verify",
-                    params: { timer: true },
-                  });
-                },
-              },
-            ]);
+            showAlert("Information", "Verify it's you!", "info");
+
+            router.replace({
+              pathname: "verify",
+              params: { timer: true },
+            });
           } else {
-            Alert.alert("Warning", data.msg);
+            showAlert("Warning", data.msg, "warning");
           }
         } else {
-          Alert.alert(
+          showAlert(
             "Error",
-            "Password update failed \nCan not process this request!"
+            "Password update failed \nCan not process this request!",
+            "error"
           );
           setIsProcessing(false);
         }
