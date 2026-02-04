@@ -14,6 +14,7 @@ import NewChatBox from "@/components/NewChatBox";
 import PrimaryHeader from "@/components/PrimaryHeader";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { FlashList } from "@shopify/flash-list";
+import { useAppAlert } from "@/components/AlertProvider";
 
 const NewChat = () => {
   const colorScheme = useColorScheme();
@@ -24,6 +25,9 @@ const NewChat = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [searchText, setSearchText] = useState("");
+  const [imageVersion, setImageVersion] = useState(Date.now());
+
+  const { showAlert } = useAppAlert();
 
   const menuItems = [
     {
@@ -61,6 +65,7 @@ const NewChat = () => {
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
+    setImageVersion(Date.now());
     loadUsers().then(() => setRefreshing(false));
   }, [searchText]);
 
@@ -80,7 +85,7 @@ const NewChat = () => {
           searchText: searchText,
         };
 
-        const response = await fetch(`${apiUrl}/o3_chat/LoadUsers`, {
+        const response = await fetch(`${apiUrl}/load-users`, {
           method: "POST",
           body: JSON.stringify(reqObject),
           headers: {
@@ -95,17 +100,17 @@ const NewChat = () => {
             setIsLoaded(true);
             setUsers(data.users);
           } else {
-            Alert.alert("Warning", data.msg);
+            showAlert("Warning", data.msg, "warning");
           }
         } else {
-          Alert.alert("Error", "Loading failed \nCannot process this request!");
+          showAlert("Error", "Loading failed \nCannot process this request!", "error");
         }
       } else {
         router.replace("sign-in");
       }
     } catch (error) {
       console.error(error);
-      Alert.alert("Error", "An unexpected error occurred.");
+      showAlert("Error", "An unexpected error occurred.", "error");
     }
   };
 
@@ -130,46 +135,54 @@ const NewChat = () => {
         searchOnPress={loadUsers}
       />
       {isLoaded ? (
-        users ? (
-          <FlashList
-            data={users}
-            renderItem={({item}) => {
-              return (
-                <NewChatBox
-                  data={{
-                    id: item.id,
-                    name: item.name,
-                    bio: item.bio,
-                    image: item.profile_img,
-                  }}
-                />
-              );
-            }}
-            keyExtractor={(item) => item.id}
-            estimatedItemSize={100}
-            refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-            }
-            showsVerticalScrollIndicator={true}
-            contentContainerStyle={styles.mainView}
-          />
-        ) : (
-          <View
-            style={[
-              styles.emptyView,
-              colorScheme === "dark" ? styles.darkView : styles.lightView,
-            ]}
-          >
-            <Text
+        <View
+          style={[
+            { flex: 1 },
+            colorScheme === "dark" ? styles.darkContentView : styles.lightContentView,
+          ]}
+        >
+          {users ? (
+            <FlashList
+              data={users}
+              renderItem={({ item }) => {
+                return (
+                  <NewChatBox
+                    data={{
+                      id: item.id,
+                      name: item.name,
+                      bio: item.bio,
+                      image: item.profile_img,
+                      imageVersion: imageVersion,
+                    }}
+                  />
+                );
+              }}
+              keyExtractor={(item) => item.id}
+              estimatedItemSize={100}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+              }
+              showsVerticalScrollIndicator={true}
+              contentContainerStyle={styles.mainView}
+            />
+          ) : (
+            <View
               style={[
-                styles.listHeaderText,
-                colorScheme === "dark" ? styles.darkText : styles.lightText,
+                styles.emptyView,
+                colorScheme === "dark" ? styles.darkView : styles.lightView,
               ]}
             >
-              Result not found for '{searchText}'
-            </Text>
-          </View>
-        )
+              <Text
+                style={[
+                  styles.listHeaderText,
+                  colorScheme === "dark" ? styles.darkText : styles.lightText,
+                ]}
+              >
+                Result not found for '{searchText}'
+              </Text>
+            </View>
+          )}
+        </View>
       ) : (
         <View style={styles.loadView}>
           <ActivityIndicator size={"large"} color={"#0C4EAC"} />
@@ -184,10 +197,16 @@ export default NewChat;
 const styles = StyleSheet.create({
   darkMainView: {
     flex: 1,
-    backgroundColor: "#111827",
+    backgroundColor: "#000000",
   },
   lightMainView: {
     flex: 1,
+    backgroundColor: "#ffffff",
+  },
+  darkContentView: {
+    backgroundColor: "#111827",
+  },
+  lightContentView: {
     backgroundColor: "#e2e8f0",
   },
   mainView: {
