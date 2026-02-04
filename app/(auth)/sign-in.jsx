@@ -1,6 +1,7 @@
 import { Link, router } from "expo-router";
 import React, { useState } from "react";
-import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useAppAlert } from "@/components/AlertProvider";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import PrimaryInput from "@/components/PrimaryInput";
@@ -14,6 +15,7 @@ import { useEffect } from "react";
 const signin = () => {
   const colorScheme = useColorScheme();
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+  const { showAlert } = useAppAlert();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -35,9 +37,9 @@ const signin = () => {
 
   const submit = async () => {
     if (username.length === 0) {
-      Alert.alert("Warning", "Please enter your username!");
+      showAlert("Warning", "Please enter your username!", "warning");
     } else if (password.length === 0) {
-      Alert.alert("Warning", "Please enter your password!");
+      showAlert("Warning", "Please enter your password!", "warning");
     } else {
       setIsProcessing(true);
       try {
@@ -46,7 +48,7 @@ const signin = () => {
           password: password,
         };
 
-        const response = await fetch(`${apiUrl}/o3_chat/SignIn`, {
+        const response = await fetch(`${apiUrl}/sign-in`, {
           method: "POST",
           body: JSON.stringify(reqObject),
           headers: {
@@ -91,12 +93,13 @@ const signin = () => {
               router.replace("home");
             }
           } else {
-            Alert.alert("Warning", data.msg);
+            showAlert("Warning", data.msg, "warning");
           }
         } else {
-          Alert.alert(
+          showAlert(
             "Error",
-            "Sign in failed \nCan not process this request!"
+            "Sign in failed \nCan not process this request!",
+            "error"
           );
           setIsProcessing(false);
         }
@@ -114,96 +117,101 @@ const signin = () => {
         colorScheme === "dark" ? styleSheat.darkView : styleSheat.lightView
       }
     >
-      <ScrollView contentContainerStyle={{ height: "100%" }}>
-        <View style={styleSheat.mainView}>
-          <View style={styleSheat.logoView}>
-            <Image
-              source={images.logo}
-              style={styleSheat.logo}
-              contentFit="contain"
-            />
-            <Text
-              style={[
-                styleSheat.snap,
-                colorScheme === "dark"
-                  ? styleSheat.darkText
-                  : styleSheat.lightText,
-                { fontSize: 36, lineHeight: 40 },
-              ]}
-            >
-              O3 Chat
-            </Text>
-          </View>
-          <View style={styleSheat.inputView}>
-            <Text
-              style={[
-                styleSheat.title,
-                colorScheme === "dark"
-                  ? styleSheat.darkText
-                  : styleSheat.lightText,
-              ]}
-            >
-              Sign in to <Text style={styleSheat.snap}>O3 Chat</Text>
-            </Text>
-            <PrimaryInput
-              title="Username"
-              titleStyles={styleSheat.inputTitle}
-              otherStyles={styleSheat.input}
-              maxLength={20}
-              handleChangeText={setUsername}
-              value={username}
-            />
-            <PrimaryInput
-              title="Password"
-              titleStyles={styleSheat.inputTitle}
-              otherStyles={styleSheat.input}
-              maxLength={20}
-              handleChangeText={setPassword}
-              value={password}
-            />
-            <View style={styleSheat.checkboxView}>
-              <Checkbox
-                style={styleSheat.checkbox}
-                value={rememberMe}
-                onValueChange={setRememberMe}
-                color={rememberMe ? "#0c4eac" : undefined}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          <View style={styleSheat.mainView}>
+            <View style={styleSheat.logoView}>
+              <Image
+                source={images.logo}
+                style={styleSheat.logo}
+                contentFit="contain"
               />
               <Text
                 style={[
-                  styleSheat.checkboxText,
+                  styleSheat.snap,
                   colorScheme === "dark"
                     ? styleSheat.darkText
                     : styleSheat.lightText,
+                  { fontSize: 36, lineHeight: 40 },
                 ]}
               >
-                Remember Me
+                O3 Chat
               </Text>
             </View>
-            <PrimaryButton
-              title={isProcessing ? "Processing..." : "Sign In"}
-              containerStyles={styleSheat.button}
-              textStyles={styleSheat.buttonText}
-              handlePress={submit}
-              isLoading={isProcessing}
-            />
-            <View style={styleSheat.linkView}>
+            <View style={styleSheat.inputView}>
               <Text
                 style={[
-                  styleSheat.textLg,
+                  styleSheat.title,
                   colorScheme === "dark"
                     ? styleSheat.darkText
                     : styleSheat.lightText,
                 ]}
               >
-                Don't have an account?
+                Sign in to <Text style={styleSheat.snap}>O3 Chat</Text>
               </Text>
-              <Link href="register-form-1" style={styleSheat.link}>
-                Register
-              </Link>
+              <PrimaryInput
+                title="Username"
+                titleStyles={styleSheat.inputTitle}
+                otherStyles={styleSheat.input}
+                maxLength={20}
+                handleChangeText={setUsername}
+                value={username}
+              />
+              <PrimaryInput
+                title="Password"
+                titleStyles={styleSheat.inputTitle}
+                otherStyles={styleSheat.input}
+                maxLength={20}
+                handleChangeText={setPassword}
+                value={password}
+              />
+              <View style={styleSheat.checkboxView}>
+                <Checkbox
+                  style={styleSheat.checkbox}
+                  value={rememberMe}
+                  onValueChange={setRememberMe}
+                  color={rememberMe ? "#0c4eac" : undefined}
+                />
+                <Text
+                  style={[
+                    styleSheat.checkboxText,
+                    colorScheme === "dark"
+                      ? styleSheat.darkText
+                      : styleSheat.lightText,
+                  ]}
+                >
+                  Remember Me
+                </Text>
+              </View>
+              <PrimaryButton
+                title={isProcessing ? "Processing..." : "Sign In"}
+                containerStyles={styleSheat.button}
+                textStyles={styleSheat.buttonText}
+                handlePress={submit}
+                isLoading={isProcessing}
+              />
+              <View style={styleSheat.linkView}>
+                <Text
+                  style={[
+                    styleSheat.textLg,
+                    colorScheme === "dark"
+                      ? styleSheat.darkText
+                      : styleSheat.lightText,
+                  ]}
+                >
+                  Don't have an account?
+                </Text>
+                <Link href="register-form-1" style={styleSheat.link}>
+                  Register
+                </Link>
+              </View>
             </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -213,7 +221,7 @@ export default signin;
 const styleSheat = StyleSheet.create({
   darkView: {
     flex: 1,
-    backgroundColor: "#111827",
+    backgroundColor: "#000000",
   },
   lightView: {
     flex: 1,
