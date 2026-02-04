@@ -54,6 +54,7 @@ const PrimaryInput = ({
           placeholderTextColor="#7b7b8b"
           onChangeText={handleChangeText}
           autoCorrect={false}
+          underlineColorAndroid="transparent"
           secureTextEntry={
             (title === "Password" && !showPassword) ||
             (title === "New Password" && !showPassword) ||
@@ -66,20 +67,20 @@ const PrimaryInput = ({
         {(title === "Password" ||
           title === "New Password" ||
           title === "Confirm Password") && (
-          <TouchableOpacity
-            onPress={() => setShowPassword(!showPassword)}
-            activeOpacity={0.7}
-          >
-            <Image
-              source={showPassword ? icons.eye : icons.eyeHide}
-              contentFit="contain"
-              style={[
-                styleSheat.eye,
-                { tintColor: colorScheme === "dark" ? "#fff" : "#0C4EAC" },
-              ]}
-            />
-          </TouchableOpacity>
-        )}
+            <TouchableOpacity
+              onPress={() => setShowPassword(!showPassword)}
+              activeOpacity={0.7}
+            >
+              <Image
+                source={showPassword ? icons.eye : icons.eyeHide}
+                contentFit="contain"
+                style={[
+                  styleSheat.eye,
+                  { tintColor: colorScheme === "dark" ? "#fff" : "#0C4EAC" },
+                ]}
+              />
+            </TouchableOpacity>
+          )}
       </View>
     </View>
   );
