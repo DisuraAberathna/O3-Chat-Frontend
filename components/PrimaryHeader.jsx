@@ -161,7 +161,7 @@ const PrimaryHeader = ({
               contentFit="contain"
               style={[
                 styleSheat.closeIcon,
-                { tintColor: colorScheme === "dark" && "#fff" },
+                { tintColor: colorScheme === "dark" ? "#fff" : "#0C4EAC" },
               ]}
             />
           </TouchableHighlight>
@@ -204,12 +204,12 @@ export default PrimaryHeader;
 
 const styleSheat = StyleSheet.create({
   darkView: {
-    backgroundColor: "#000",
+    backgroundColor: "#000000",
     borderColor: "#0f172a",
   },
   lightView: {
-    backgroundColor: "#fff",
-    borderColor: "#e2e8f0",
+    backgroundColor: "#ffffff",
+    borderColor: "#cbd5e1",
   },
   darkText: {
     color: "#f1f5f9",
