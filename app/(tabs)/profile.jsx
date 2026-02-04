@@ -4,8 +4,8 @@ import {
   ScrollView,
   TouchableHighlight,
   StyleSheet,
-  Alert,
 } from "react-native";
+import { useAppAlert } from "@/components/AlertProvider";
 import React, { useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import DetialInput from "@/components/DetialInput";
@@ -52,6 +52,7 @@ const menuItems = [
 const profile = () => {
   const colorScheme = useColorScheme();
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+  const { showAlert } = useAppAlert();
 
   const [bottomSheetVisibility, setBottomSheetVisibility] = useState(false);
   const [title, setTitle] = useState();
@@ -59,6 +60,7 @@ const profile = () => {
   const [image, setImage] = useState(null);
   const [user, setUser] = useState(null);
   const [visibility, setVisibility] = useState(false);
+  const [imageVersion, setImageVersion] = useState(Date.now());
 
   const getUser = async () => {
     const storedData = await AsyncStorage.getItem("user");
@@ -72,42 +74,47 @@ const profile = () => {
 
   const update = async () => {
     if (title === "Username" && value.length === 0) {
-      Alert.alert("Warning", "Please enter your username!");
+      showAlert("Warning", "Please enter your username!", "warning");
     } else if (title === "Username" && value.length < 3) {
-      Alert.alert("Warning", "Your username must have more than 3 characters!");
+      showAlert("Warning", "Your username must have more than 3 characters!", "warning");
     } else if (title === "Username" && value.length > 20) {
-      Alert.alert(
+      showAlert(
         "Warning",
-        "Your username has exceeded the maximum character limit!"
+        "Your username has exceeded the maximum character limit!",
+        "warning"
       );
     } else if (title === "First Name" && value.length === 0) {
-      Alert.alert("Warning", "Please enter your first name!");
+      showAlert("Warning", "Please enter your first name!", "warning");
     } else if (title === "First Name" && value.length < 3) {
-      Alert.alert(
+      showAlert(
         "Warning",
-        "Your first name must have more than 3 characters!"
+        "Your first name must have more than 3 characters!",
+        "warning"
       );
     } else if (title === "First Name" && value.length > 50) {
-      Alert.alert(
+      showAlert(
         "Warning",
-        "Your first name has exceeded the maximum character limit!"
+        "Your first name has exceeded the maximum character limit!",
+        "warning"
       );
     } else if (title === "First Name" && containsNumbers(value)) {
-      Alert.alert("Warning", "Your first name can not has numbers!");
+      showAlert("Warning", "Your first name can not has numbers!", "warning");
     } else if (title === "Last Name" && value.length === 0) {
-      Alert.alert("Warning", "Please enter your last name!");
+      showAlert("Warning", "Please enter your last name!", "warning");
     } else if (title === "Last Name" && value.length < 3) {
-      Alert.alert(
+      showAlert(
         "Warning",
-        "Your last name must have more than 3 characters!"
+        "Your last name must have more than 3 characters!",
+        "warning"
       );
     } else if (title === "Last Name" && value.length > 50) {
-      Alert.alert(
+      showAlert(
         "Warning",
-        "Your last name has exceeded the maximum character limit!"
+        "Your last name has exceeded the maximum character limit!",
+        "warning"
       );
     } else if (title === "Last Name" && containsNumbers(value)) {
-      Alert.alert("Warning", "Your last name can not has numbers!");
+      showAlert("Warning", "Your last name can not has numbers!", "warning");
     } else if (title === "Bio" && value.length === 0) {
     } else {
       const reqObject = {
@@ -119,7 +126,7 @@ const profile = () => {
       };
 
       try {
-        const response = await fetch(`${apiUrl}/o3_chat/Update`, {
+        const response = await fetch(`${apiUrl}/update`, {
           method: "POST",
           body: JSON.stringify(reqObject),
           headers: {
@@ -150,19 +157,20 @@ const profile = () => {
               }
             }
 
-            Alert.alert("Information", "Your profile successfully updated!");
+            showAlert("Information", "Your profile successfully updated!", "success");
 
             setBottomSheetVisibility(false);
             setTitle("");
             setValue("");
             getUser();
           } else {
-            Alert.alert("Warning", data.msg);
+            showAlert("Warning", data.msg, "warning");
           }
         } else {
-          Alert.alert(
+          showAlert(
             "Error",
-            "Profile update failed \nCan not process this request!"
+            "Profile update failed \nCan not process this request!",
+            "error"
           );
         }
       } catch (error) {
@@ -233,6 +241,7 @@ const profile = () => {
 
   return (
     <SafeAreaView
+      edges={["top", "left", "right"]}
       style={
         colorScheme === "dark"
           ? styleSheat.darkMainView
@@ -240,155 +249,167 @@ const profile = () => {
       }
     >
       <PrimaryHeader title="User Profile" menu={true} menuItems={menuItems} />
-      {user && (
-        <ScrollView>
-          <View style={styleSheat.imageView}>
-            <PrimaryImagePicker
-              image={image}
-              title={"Edit Profile Picture"}
-              user={user}
-              setTitle={setTitle}
-              setValue={setValue}
-              setBottomSheetVisibility={setBottomSheetVisibility}
-            />
-          </View>
-          <View
-            style={[
-              styleSheat.view,
-              colorScheme === "dark"
-                ? styleSheat.darkView
-                : styleSheat.lightView,
-            ]}
-          >
-            <View style={styleSheat.titleView}>
-              <Text
-                style={[
-                  styleSheat.title,
-                  colorScheme === "dark"
-                    ? styleSheat.darkText
-                    : styleSheat.lightText,
-                ]}
-              >
-                Personal Details
-              </Text>
+      <View
+        style={[
+          { flex: 1 },
+          colorScheme === "dark"
+            ? styleSheat.darkContentView
+            : styleSheat.lightContentView,
+        ]}
+      >
+        {user && (
+          <ScrollView>
+            <View style={styleSheat.imageView}>
+              <PrimaryImagePicker
+                image={image}
+                title={"Edit Profile Picture"}
+                user={user}
+                setTitle={setTitle}
+                setValue={setValue}
+                setBottomSheetVisibility={setBottomSheetVisibility}
+                imageVersion={imageVersion}
+              />
             </View>
-            {personalDetials.map((item, index) => (
-              <View key={index}>
+            <View
+              style={[
+                styleSheat.view,
+                colorScheme === "dark"
+                  ? styleSheat.darkView
+                  : styleSheat.lightView,
+              ]}
+            >
+              <View style={styleSheat.titleView}>
+                <Text
+                  style={[
+                    styleSheat.title,
+                    colorScheme === "dark"
+                      ? styleSheat.darkText
+                      : styleSheat.lightText,
+                  ]}
+                >
+                  Personal Details
+                </Text>
+              </View>
+              {personalDetials.map((item, index) => (
+                <View key={index}>
+                  <DetialInput
+                    title={item.title}
+                    value={item.value}
+                    editable={item.editable}
+                    handlePress={item.handlePress}
+                  />
+                </View>
+              ))}
+              <BottomSheet
+                visibility={bottomSheetVisibility}
+                setVisibility={setBottomSheetVisibility}
+                image={image}
+                setImage={setImage}
+                title={title}
+                value={value}
+                autoSave={true}
+                setValue={setValue}
+                onSuccess={() => {
+                  setImageVersion(Date.now());
+                  getUser();
+                }}
+                handlePress={
+                  (title === "Username" ||
+                    title === "First Name" ||
+                    title === "Last Name" ||
+                    title === "Bio") &&
+                  update
+                }
+              />
+            </View>
+            <View
+              style={[
+                styleSheat.view,
+                colorScheme === "dark"
+                  ? styleSheat.darkView
+                  : styleSheat.lightView,
+              ]}
+            >
+              <View style={styleSheat.titleView}>
+                <Text
+                  style={[
+                    styleSheat.title,
+                    colorScheme === "dark"
+                      ? styleSheat.darkText
+                      : styleSheat.lightText,
+                  ]}
+                >
+                  Contact Details
+                </Text>
+              </View>
+              {contactDetails.map((item, index) => (
                 <DetialInput
                   title={item.title}
                   value={item.value}
-                  editable={item.editable}
-                  handlePress={item.handlePress}
+                  key={index}
                 />
-                <BottomSheet
-                  visibility={bottomSheetVisibility}
-                  setVisibility={setBottomSheetVisibility}
-                  image={image}
-                  setImage={setImage}
-                  title={title}
-                  value={value}
-                  autoSave={true}
-                  setValue={setValue}
-                  handlePress={
-                    (title === "Username" ||
-                      title === "First Name" ||
-                      title === "Last Name" ||
-                      title === "Bio") &&
-                    update
-                  }
-                />
+              ))}
+            </View>
+            <View
+              style={[
+                styleSheat.view,
+                colorScheme === "dark"
+                  ? styleSheat.darkView
+                  : styleSheat.lightView,
+                { marginBottom: 32 },
+              ]}
+            >
+              <View style={styleSheat.titleView}>
+                <Text
+                  style={[
+                    styleSheat.title,
+                    colorScheme === "dark"
+                      ? styleSheat.darkText
+                      : styleSheat.lightText,
+                  ]}
+                >
+                  Security Details
+                </Text>
               </View>
-            ))}
-          </View>
-          <View
-            style={[
-              styleSheat.view,
-              colorScheme === "dark"
-                ? styleSheat.darkView
-                : styleSheat.lightView,
-            ]}
-          >
-            <View style={styleSheat.titleView}>
-              <Text
-                style={[
-                  styleSheat.title,
-                  colorScheme === "dark"
-                    ? styleSheat.darkText
-                    : styleSheat.lightText,
-                ]}
-              >
-                Contact Details
-              </Text>
+              <View style={styleSheat.passwordButtonView}>
+                <TouchableHighlight
+                  activeOpacity={0.8}
+                  style={styleSheat.questionButton}
+                  underlayColor={colorScheme === "dark" ? "#404040" : "#F1F1F1"}
+                  onPress={() => {
+                    if (visibility === true) {
+                      setVisibility(false);
+                    } else {
+                      setVisibility(true);
+                    }
+                  }}
+                >
+                  <View style={styleSheat.questionInnerView}>
+                    <Text
+                      style={[
+                        styleSheat.question,
+                        colorScheme === "dark"
+                          ? styleSheat.darkText
+                          : styleSheat.lightText,
+                      ]}
+                    >
+                      Change Password
+                    </Text>
+                    <Image
+                      source={visibility === true ? icons.minus : icons.plus}
+                      style={[
+                        styleSheat.icon,
+                        { tintColor: colorScheme === "dark" && "#fff" },
+                      ]}
+                    />
+                  </View>
+                </TouchableHighlight>
+                {visibility && <UpdatePassword user={user} />}
+              </View>
             </View>
-            {contactDetails.map((item, index) => (
-              <DetialInput
-                title={item.title}
-                value={item.value}
-                editable={item.editable}
-                handlePress={item.handlePress}
-                key={index}
-              />
-            ))}
-          </View>
-          <View
-            style={[
-              styleSheat.view,
-              colorScheme === "dark"
-                ? styleSheat.darkView
-                : styleSheat.lightView,
-              { marginBottom: 32 },
-            ]}
-          >
-            <View style={styleSheat.titleView}>
-              <Text
-                style={[
-                  styleSheat.title,
-                  colorScheme === "dark"
-                    ? styleSheat.darkText
-                    : styleSheat.lightText,
-                ]}
-              >
-                Security Details
-              </Text>
-            </View>
-            <View style={styleSheat.passwordButtonView}>
-              <TouchableHighlight
-                activeOpacity={0.8}
-                style={styleSheat.questionButton}
-                underlayColor={colorScheme === "dark" ? "#404040" : "#F1F1F1"}
-                onPress={() => {
-                  if (visibility === true) {
-                    setVisibility(false);
-                  } else {
-                    setVisibility(true);
-                  }
-                }}
-              >
-                <>
-                  <Text
-                    style={[
-                      styleSheat.question,
-                      colorScheme === "dark"
-                        ? styleSheat.darkText
-                        : styleSheat.lightText,
-                    ]}
-                  >
-                    Change Password
-                  </Text>
-                  <Image
-                    source={visibility === true ? icons.minus : icons.plus}
-                    style={[
-                      styleSheat.icon,
-                      { tintColor: colorScheme === "dark" && "#fff" },
-                    ]}
-                  />
-                </>
-              </TouchableHighlight>
-              {visibility && <UpdatePassword user={user} />}
-            </View>
-          </View>
-        </ScrollView>
-      )}
+          </ScrollView>
+        )}
+      </View>
     </SafeAreaView>
   );
 };
@@ -398,10 +419,16 @@ export default profile;
 const styleSheat = StyleSheet.create({
   darkMainView: {
     flex: 1,
-    backgroundColor: "#111827",
+    backgroundColor: "#000000",
   },
   lightMainView: {
     flex: 1,
+    backgroundColor: "#ffffff",
+  },
+  darkContentView: {
+    backgroundColor: "#111827",
+  },
+  lightContentView: {
     backgroundColor: "#e2e8f0",
   },
   imageView: {
@@ -452,10 +479,13 @@ const styleSheat = StyleSheet.create({
     borderRadius: 12,
   },
   questionButton: {
-    flexDirection: "row",
-    justifyContent: "space-between",
     padding: 8,
     borderRadius: 12,
+  },
+  questionInnerView: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   question: {
     fontSize: 18,
