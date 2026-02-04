@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
-  Alert,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -8,6 +9,7 @@ import {
   TouchableHighlight,
   View,
 } from "react-native";
+import { useAppAlert } from "@/components/AlertProvider";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import images from "@/constants/images";
@@ -20,38 +22,20 @@ const verify = () => {
   const colorScheme = useColorScheme();
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
   const { timer } = useLocalSearchParams();
+  const { showAlert } = useAppAlert();
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [isCompleteOtp, setIsCompleteOtp] = useState(false);
-  const [otp, setOtp] = useState(new Array(6).fill(""));
-  const [focusedInput, setFocusedInput] = useState(null);
+  const [otp, setOtp] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
   const [timeLeft, setTimeLeft] = useState(3 * 60);
   const [isRunning, setIsRunning] = useState(false);
+  const inputRef = useRef(null);
 
-  const inputs = useRef([]);
-
-  const handleTextChange = (text, index) => {
-    if (isNaN(Number(text))) return;
-
-    const newOtp = [...otp];
-    newOtp[index] = text;
-    setOtp(newOtp);
-
-    if (text && index < inputs.current.length - 1) {
-      inputs.current[index + 1]?.focus();
-    }
-
-    if (newOtp.every((value) => value !== "")) {
-      setIsCompleteOtp(true);
-    } else {
-      setIsCompleteOtp(false);
-    }
-  };
-
-  const handleKeyPress = (e, index) => {
-    if (e.nativeEvent.key === "Backspace" && !otp[index] && index > 0) {
-      inputs.current[index - 1]?.focus();
-    }
+  const handleTextChange = (text) => {
+    const cleanText = text.replace(/[^0-9]/g, "").slice(0, 6);
+    setOtp(cleanText);
+    setIsCompleteOtp(cleanText.length === 6);
   };
 
   useEffect(() => {
@@ -99,12 +83,12 @@ const verify = () => {
 
           const reqObject = {
             id: not_verified_user.userId,
-            otp: otp.join(""),
+            otp: otp,
             serverOTP: timer === "true" ? not_verified_user.serverOTP : "",
             password: timer === "true" ? not_verified_user.password : "",
           };
 
-          const response = await fetch(`${apiUrl}/o3_chat/Verify`, {
+          const response = await fetch(`${apiUrl}/verify`, {
             method: "POST",
             body: JSON.stringify(reqObject),
             headers: {
@@ -126,12 +110,13 @@ const verify = () => {
                 router.replace("home");
               }
             } else {
-              Alert.alert("Warning", data.msg);
+              showAlert("Warning", data.msg, "warning");
             }
           } else {
-            Alert.alert(
+            showAlert(
               "Error",
-              "Verification failed \nCan not process this request!"
+              "Verification failed \nCan not process this request!",
+              "error"
             );
             setIsProcessing(false);
           }
@@ -140,11 +125,12 @@ const verify = () => {
         }
       } catch (error) {
         console.error(error);
+        showAlert("Error", "An unexpected error occurred.", "error");
       } finally {
         setIsProcessing(false);
       }
     } else {
-      Alert.alert("Warning", "Please complete OTP");
+      showAlert("Warning", "Please complete OTP", "warning");
     }
   };
 
@@ -153,7 +139,7 @@ const verify = () => {
       const storedData = await AsyncStorage.getItem("not-verified-user");
 
       if (storedData !== null) {
-        const response = await fetch(`${apiUrl}/o3_chat/ResendOTP`, {
+        const response = await fetch(`${apiUrl}/resend-otp`, {
           method: "POST",
           body: storedData,
           headers: {
@@ -165,17 +151,19 @@ const verify = () => {
           const data = await response.json();
 
           if (data.ok) {
-            Alert.alert(
+            showAlert(
               "Information",
-              "OTP send to your email. \nPlease check it."
+              "OTP sent to your email. \nPlease check it.",
+              "success"
             );
           } else {
-            Alert.alert("Warning", data.msg);
+            showAlert("Warning", data.msg, "warning");
           }
         } else {
-          Alert.alert(
+          showAlert(
             "Error",
-            "OTP resend failed \nCan not process this request!"
+            "OTP resend failed \nCan not process this request!",
+            "error"
           );
           setIsProcessing(false);
         }
@@ -189,99 +177,125 @@ const verify = () => {
 
   return (
     <SafeAreaView
+      edges={["top", "left", "right"]}
       style={
         colorScheme === "dark" ? styleSheat.darkView : styleSheat.lightView
       }
     >
-      <ScrollView contentContainerStyle={{ height: "100%" }}>
-        <View style={styleSheat.mainView}>
-          <View style={styleSheat.logoView}>
-            <Image
-              source={images.logo}
-              style={styleSheat.logo}
-              contentFit="contain"
-            />
-            <Text
-              style={[
-                styleSheat.snap,
-                colorScheme === "dark"
-                  ? styleSheat.darkText
-                  : styleSheat.lightText,
-                { fontSize: 36, lineHeight: 40 },
-              ]}
-            >
-              O3 Chat
-            </Text>
-          </View>
-          <View style={styleSheat.inputButtonView}>
-            <Text
-              style={[
-                styleSheat.title,
-                colorScheme === "dark"
-                  ? styleSheat.darkText
-                  : styleSheat.lightText,
-              ]}
-            >
-              Verify Your Account
-            </Text>
-            <View style={styleSheat.inputView}>
-              {otp.map((data, index) => (
-                <TextInput
-                  key={index}
-                  ref={(ref) => (inputs.current[index] = ref)}
-                  maxLength={1}
-                  keyboardType="numeric"
-                  value={data}
-                  autoComplete="false"
-                  onChangeText={(text) => handleTextChange(text, index)}
-                  onKeyPress={(e) => handleKeyPress(e, index)}
-                  onFocus={() => setFocusedInput(index)}
-                  style={[
-                    styleSheat.input,
-                    colorScheme === "dark"
-                      ? styleSheat.darkBorder
-                      : styleSheat.lightBorder,
-                    colorScheme === "dark"
-                      ? styleSheat.darkText
-                      : styleSheat.lightText,
-                    focusedInput === index && styleSheat.focusedInput,
-                  ]}
-                />
-              ))}
-            </View>
-            {timer === "true" && (
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          <View style={styleSheat.mainView}>
+            <View style={styleSheat.logoView}>
+              <Image
+                source={images.logo}
+                style={styleSheat.logo}
+                contentFit="contain"
+              />
               <Text
                 style={[
-                  styleSheat.timerText,
+                  styleSheat.snap,
+                  colorScheme === "dark"
+                    ? styleSheat.darkText
+                    : styleSheat.lightText,
+                  { fontSize: 36, lineHeight: 40 },
+                ]}
+              >
+                O3 Chat
+              </Text>
+            </View>
+            <View style={styleSheat.inputButtonView}>
+              <Text
+                style={[
+                  styleSheat.title,
                   colorScheme === "dark"
                     ? styleSheat.darkText
                     : styleSheat.lightText,
                 ]}
               >
-                {formatTime(timeLeft)}
+                Verify Your Account
               </Text>
-            )}
-            <PrimaryButton
-              title={isProcessing ? "Processing..." : "Verify"}
-              containerStyles={[
-                styleSheat.button,
-                timer !== "true" && { marginTop: 36 },
-              ]}
-              textStyles={styleSheat.buttonText}
-              handlePress={verify}
-              isLoading={isProcessing}
-            />
-            <TouchableHighlight
-              style={styleSheat.otpButton}
-              underlayColor={colorScheme === "dark" ? "#404040" : "#F1F1F1"}
-              activeOpacity={0.7}
-              onPress={resend}
-            >
-              <Text style={styleSheat.otpButtonText}>Resend OTP</Text>
-            </TouchableHighlight>
+              <View style={styleSheat.inputView}>
+                <TextInput
+                  ref={inputRef}
+                  value={otp}
+                  onChangeText={handleTextChange}
+                  maxLength={6}
+                  keyboardType="numeric"
+                  autoComplete="one-time-code"
+                  textContentType="oneTimeCode"
+                  underlineColorAndroid="transparent"
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
+                  style={styleSheat.hiddenInput}
+                />
+                {[0, 1, 2, 3, 4, 5].map((index) => {
+                  const isCurrent = otp.length === index && isFocused;
+                  const isFilled = otp.length > index;
+
+                  return (
+                    <TouchableHighlight
+                      key={index}
+                      onPress={() => inputRef.current?.focus()}
+                      underlayColor="transparent"
+                      style={[
+                        styleSheat.input,
+                        colorScheme === "dark"
+                          ? styleSheat.darkBorder
+                          : styleSheat.lightBorder,
+                        (isCurrent || (index === 5 && otp.length === 6 && isFocused)) && styleSheat.focusedInput,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styleSheat.inputText,
+                          colorScheme === "dark"
+                            ? styleSheat.darkText
+                            : styleSheat.lightText,
+                        ]}
+                      >
+                        {otp[index] || ""}
+                      </Text>
+                    </TouchableHighlight>
+                  );
+                })}
+              </View>
+              {timer === "true" && (
+                <Text
+                  style={[
+                    styleSheat.timerText,
+                    colorScheme === "dark"
+                      ? styleSheat.darkText
+                      : styleSheat.lightText,
+                  ]}
+                >
+                  {formatTime(timeLeft)}
+                </Text>
+              )}
+              <PrimaryButton
+                title={isProcessing ? "Processing..." : "Verify"}
+                containerStyles={[
+                  styleSheat.button,
+                  timer !== "true" && { marginTop: 36 },
+                ]}
+                textStyles={styleSheat.buttonText}
+                handlePress={verify}
+                isLoading={isProcessing}
+              />
+              <TouchableHighlight
+                style={styleSheat.otpButton}
+                underlayColor={colorScheme === "dark" ? "#404040" : "#F1F1F1"}
+                activeOpacity={0.7}
+                onPress={resend}
+              >
+                <Text style={styleSheat.otpButtonText}>Resend OTP</Text>
+              </TouchableHighlight>
+            </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -341,13 +355,23 @@ const styleSheat = StyleSheet.create({
   },
   input: {
     flex: 1,
-    height: 50,
-    fontSize: 24,
-    lineHeight: 32,
-    fontWeight: "600",
+    height: 60,
     borderWidth: 2,
     borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 0,
+  },
+  inputText: {
+    fontSize: 24,
+    fontWeight: "600",
     textAlign: "center",
+  },
+  hiddenInput: {
+    position: "absolute",
+    width: 1,
+    height: 1,
+    opacity: 0,
   },
   focusedInput: {
     borderColor: "#0C4EAC",
