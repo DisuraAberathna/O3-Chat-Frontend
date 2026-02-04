@@ -15,6 +15,7 @@ import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { useState } from "react";
+import { useAppAlert } from "./AlertProvider";
 
 const BottomSheet = ({
   handlePress,
@@ -26,39 +27,54 @@ const BottomSheet = ({
   title,
   value,
   setValue,
+  onSuccess,
 }) => {
   const colorScheme = useColorScheme();
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
   const [isProcessing, setIsProcessing] = useState(false);
 
+  const { showAlert } = useAppAlert();
+
   const pickImageFromGallery = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: 'images',
       allowsEditing: true,
       aspect: [6, 6],
       quality: 0.5,
     });
 
     if (!result.canceled) {
-      setImage(result.assets[0].uri);
+      const selectedUri = result.assets[0].uri;
+      setImage(selectedUri);
+      if (autoSave) {
+        saveImage(selectedUri);
+      } else {
+        setVisibility(false);
+      }
     }
   };
 
   const pickImageFromCamera = async () => {
     let result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: 'images',
       allowsEditing: true,
       aspect: [6, 6],
       quality: 0.5,
     });
 
     if (!result.canceled) {
-      setImage(result.assets[0].uri);
+      const selectedUri = result.assets[0].uri;
+      setImage(selectedUri);
+      if (autoSave) {
+        saveImage(selectedUri);
+      } else {
+        setVisibility(false);
+      }
     }
   };
 
-  const saveImage = async () => {
+  const saveImage = async (selectedImage) => {
     setIsProcessing(true);
     try {
       const storedData = await AsyncStorage.getItem("user");
@@ -69,12 +85,12 @@ const BottomSheet = ({
         const form = new FormData();
         form.append("id", user.id);
         form.append("image", {
-          uri: image,
+          uri: selectedImage || image,
           type: "image/png",
           name: "avatar.png",
         });
 
-        const response = await fetch(`${apiUrl}/o3_chat/SaveProfileImage`, {
+        const response = await fetch(`${apiUrl}/save-profile-image`, {
           method: "POST",
           body: form,
         });
@@ -83,15 +99,19 @@ const BottomSheet = ({
           const data = await response.json();
 
           if (data.ok) {
-            Alert.alert("Information", "Profile image updated!");
-            setVisibility(false);
+            showAlert("Information", "Profile image updated!", "success");
+            onSuccess && onSuccess();
+            setTimeout(() => {
+              setVisibility(false);
+            }, 1500);
           } else {
-            Alert.alert("Warning", data.msg);
+            showAlert("Warning", data.msg, "warning");
           }
         } else {
-          Alert.alert(
+          showAlert(
             "Error",
-            "Profile image update failed \nCan not process this request!"
+            "Profile image update failed \nCan not process this request!",
+            "error"
           );
         }
       } else {
@@ -125,8 +145,8 @@ const BottomSheet = ({
               {title === "Edit Profile Picture"
                 ? "Edit Profile Picture"
                 : title === "Profile Picture"
-                ? "Profile Picture"
-                : "Edit Details"}
+                  ? "Profile Picture"
+                  : "Edit Details"}
             </Text>
             <TouchableHighlight
               activeOpacity={0.8}
