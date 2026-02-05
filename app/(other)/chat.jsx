@@ -21,6 +21,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { FlashList } from "@shopify/flash-list";
+import { demoChats } from "@/constants/demoData";
 
 const Chat = () => {
   const colorScheme = useColorScheme();
@@ -93,43 +94,19 @@ const Chat = () => {
     try {
       const storedData = await AsyncStorage.getItem("user");
 
-      if (storedData) {
-        const user = JSON.parse(storedData);
-        setUser(user);
+      // if (storedData) { // Auth check bypassed for demo
+      // const user = JSON.parse(storedData);
+      // setUser(user);
 
-        const reqObject = {
-          loggedInId: user.id,
-          otherId: id,
-        };
+      setTimeout(() => {
+        setChats(demoChats);
+        setIsLoaded(true);
+        setLoad(false);
+      }, 500);
 
-        const response = await fetch(`${apiUrl}/load-chats`, {
-          method: "POST",
-          body: JSON.stringify(reqObject),
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-
-          if (data.ok) {
-            setChats(data.chats);
-            setIsLoaded(true);
-            setLoad(false);
-          } else {
-            showAlert("Warning", data.msg, "warning");
-          }
-        } else {
-          showAlert(
-            "Error",
-            "Message loading failed \nCan not process this request!",
-            "error"
-          );
-        }
-      } else {
-        router.replace("sign-in");
-      }
+      // } else {
+      //   router.replace("sign-in");
+      // }
     } catch (error) {
       console.error(error);
     }
@@ -147,55 +124,34 @@ const Chat = () => {
   };
 
   const sendMessage = async () => {
-    if (user !== null) {
-      if (msgImage || message.length !== 0) {
-        const form = new FormData();
-        if (msgImage) {
-          form.append("image", {
-            uri: msgImage,
-            type: "image/png",
-            name: "msgImg.png",
-          });
-        }
-        if (message.length !== 0) {
-          form.append("message", message);
-        }
-        form.append("toUser", id);
-        form.append("fromUser", user.id);
-        if (reply === 0) {
-          form.append("reply", false);
-        } else {
-          form.append("reply", true);
-          form.append("msgId", reply);
-        }
+    // if (user !== null) { // Auth check bypassed
+    if (msgImage || message.length !== 0) {
 
-        try {
-          const response = await fetch(`${apiUrl}/send-message`, {
-            method: "POST",
-            body: form,
-          });
+      // Simulate send
+      setTimeout(() => {
+        const newMsg = {
+          id: Date.now(),
+          msg: message,
+          time: "Just now",
+          side: "right",
+          status: 1,
+          img: msgImage,
+        };
+        setChats(prev => [...prev, newMsg]);
 
-          if (response.ok) {
-            setLoad(true);
-            setMessage("");
-            setMsgImage(null);
-            setReply(0);
-            setReplyData({});
-            setFocusedInput(false);
-          } else {
-            showAlert(
-              "Error",
-              "Message sending failed \nCan not process this request!",
-              "error"
-            );
-          }
-        } catch (error) {
-          console.error(error);
-        }
-      }
-    } else {
-      router.replace("sign-in");
+        setMessage("");
+        setMsgImage(null);
+        setReply(0);
+        setReplyData({});
+        setFocusedInput(false);
+
+        // Allow list to update then scroll
+        setTimeout(() => goToBottom(), 100);
+      }, 100);
     }
+    // } else {
+    //   router.replace("sign-in");
+    // }
   };
 
   const onRefresh = useCallback(() => {
