@@ -15,6 +15,7 @@ import PrimaryHeader from "@/components/PrimaryHeader";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { FlashList } from "@shopify/flash-list";
 import { useAppAlert } from "@/components/AlertProvider";
+import { demoUsers } from "@/constants/demoData";
 
 const NewChat = () => {
   const colorScheme = useColorScheme();
@@ -74,40 +75,17 @@ const NewChat = () => {
       setIsLoaded(false);
     }
 
-    const storedData = await AsyncStorage.getItem("user");
-
     try {
-      if (storedData !== null) {
-        const user = JSON.parse(storedData);
-
-        const reqObject = {
-          id: user.id,
-          searchText: searchText,
-        };
-
-        const response = await fetch(`${apiUrl}/load-users`, {
-          method: "POST",
-          body: JSON.stringify(reqObject),
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-
-          if (data.ok) {
-            setIsLoaded(true);
-            setUsers(data.users);
-          } else {
-            showAlert("Warning", data.msg, "warning");
-          }
-        } else {
-          showAlert("Error", "Loading failed \nCannot process this request!", "error");
+      setTimeout(() => {
+        let data = demoUsers;
+        if (searchText) {
+          data = demoUsers.filter(user =>
+            user.name.toLowerCase().includes(searchText.toLowerCase())
+          );
         }
-      } else {
-        router.replace("sign-in");
-      }
+        setUsers(data);
+        setIsLoaded(true);
+      }, 500);
     } catch (error) {
       console.error(error);
       showAlert("Error", "An unexpected error occurred.", "error");
