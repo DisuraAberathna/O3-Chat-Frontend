@@ -77,49 +77,17 @@ const BottomSheet = ({
   const saveImage = async (selectedImage) => {
     setIsProcessing(true);
     try {
-      const storedData = await AsyncStorage.getItem("user");
-
-      if (storedData !== null) {
-        const user = JSON.parse(storedData);
-
-        const form = new FormData();
-        form.append("id", user.id);
-        form.append("image", {
-          uri: selectedImage || image,
-          type: "image/png",
-          name: "avatar.png",
-        });
-
-        const response = await fetch(`${apiUrl}/save-profile-image`, {
-          method: "POST",
-          body: form,
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-
-          if (data.ok) {
-            showAlert("Information", "Profile image updated!", "success");
-            onSuccess && onSuccess();
-            setTimeout(() => {
-              setVisibility(false);
-            }, 1500);
-          } else {
-            showAlert("Warning", data.msg, "warning");
-          }
-        } else {
-          showAlert(
-            "Error",
-            "Profile image update failed \nCan not process this request!",
-            "error"
-          );
-        }
-      } else {
-        router.replace("sign-in");
-      }
+      // Simulation
+      setTimeout(() => {
+        showAlert("Information", "Profile image updated! (Demo)", "success");
+        onSuccess && onSuccess();
+        setTimeout(() => {
+          setVisibility(false);
+        }, 1500);
+        setIsProcessing(false);
+      }, 1000);
     } catch (error) {
       console.error(error);
-    } finally {
       setIsProcessing(false);
     }
   };
