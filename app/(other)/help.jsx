@@ -17,6 +17,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const fqas = [
   {
+    title: "User Profile",
     question: "How do I access my profile?",
     answer:
       "You can access your profile by tapping on the 'Profile' icon in the bottom navigation bar. This will open the 'User Profile' screen where you can view and edit your details.",
@@ -25,11 +26,6 @@ const fqas = [
     question: "How can I update my profile?",
     answer:
       "Navigate to the 'Profile' section using the bottom menu. From there, you can update your username, first name, last name, bio, and contact details by clicking the pencil icon next to each field.",
-  },
-  {
-    question: "How do I change my profile picture?",
-    answer:
-      "To change your profile picture, go to the 'Profile' section, click on the empty avatar at the top of the screen, and select a new image from your device's gallery.",
   },
   {
     question:
@@ -43,16 +39,17 @@ const fqas = [
       "In the 'Profile' section under 'Contact Details', tap the pencil icon next to your mobile number or email. Enter your updated contact information and save the changes.",
   },
   {
-    question: "How do I change my password?",
+    question: "How do I change my profile picture?",
     answer:
-      "Navigate to the 'Security Details' section in the 'Profile' tab. Enter your new password in both the 'New Password' and 'Confirm Password' fields, then tap the 'Update' button to save the new password.",
+      "To change your profile picture, go to the 'Profile' section, click on the empty avatar at the top of the screen, and select a new image from your device's gallery.",
   },
   {
-    question: "How do I navigate between different sections of the app?",
+    question: "Can I customize my profile photo?",
     answer:
-      "Use the navigation bar at the bottom of the screen to switch between the 'Home' and 'Profile' sections.",
+      "The ability to upload a profile photo is currently under development. Once available, you'll be able to personalize your account with your own image.",
   },
   {
+    title: "Chat & Navigation",
     question: "How do I create a new chat?",
     answer:
       "To create a new chat, click on the three-dot menu in the top-right corner of the home screen, select 'New Chat,' and choose a contact from the list.",
@@ -68,9 +65,15 @@ const fqas = [
       "Use the search option from the three-dot menu on the home screen to find a contact by their name.",
   },
   {
-    question: "How do I sign out of O3 Chat?",
+    question: "How do I navigate between different sections of the app?",
     answer:
-      "To sign out, click on the three-dot menu in the top-right corner of the home screen or profile screen, and select 'Sign Out.'",
+      "Use the navigation bar at the bottom of the screen to switch between the 'Home' and 'Profile' sections.",
+  },
+  {
+    title: "Account & Security",
+    question: "How do I change my password?",
+    answer:
+      "Navigate to the 'Security Details' section in the 'Profile' tab. Enter your new password in both the 'New Password' and 'Confirm Password' fields, then tap the 'Update' button to save the new password.",
   },
   {
     question: "Is my data secure on O3 Chat?",
@@ -78,19 +81,20 @@ const fqas = [
       "Yes, O3 Chat takes your privacy and data security seriously. All messages are encrypted, and your personal information is kept safe and confidential.",
   },
   {
-    question: "Can I customize my profile photo?",
+    question: "How do I sign out of O3 Chat?",
     answer:
-      "The ability to upload a profile photo is currently under development. Once available, you'll be able to personalize your account with your own image.",
+      "To sign out, click on the three-dot menu in the top-right corner of the home screen or profile screen, and select 'Sign Out.'",
+  },
+  {
+    title: "Support & Info",
+    question: "What platforms does O3 Chat support?",
+    answer:
+      "O3 Chat is designed for mobile devices and is compatible with both Android and iOS platforms. Future updates will include desktop support.",
   },
   {
     question: "What should I do if I encounter issues with the app?",
     answer:
       "If you experience any issues, navigate to the 'Help' option in the three-dot menu and follow the instructions for troubleshooting or contact customer support.",
-  },
-  {
-    question: "What platforms does O3 Chat support?",
-    answer:
-      "O3 Chat is designed for mobile devices and is compatible with both Android and iOS platforms. Future updates will include desktop support.",
   },
 ];
 
@@ -152,54 +156,67 @@ const Help = () => {
       >
         <ScrollView>
           {fqas.map((item, index) => (
-            <View
-              key={index}
-              style={[
-                styleSheat.mainView,
-                colorScheme === "dark"
-                  ? styleSheat.darkView
-                  : styleSheat.lightView,
-              ]}
-            >
-              <TouchableHighlight
-                activeOpacity={0.8}
-                style={styleSheat.questionButton}
-                underlayColor={colorScheme === "dark" ? "#404040" : "#F1F1F1"}
-                onPress={() => {
-                  if (idx === index && visibility === true) {
-                    setVisibility(false);
-                    setIdx();
-                  } else {
-                    setVisibility(true);
-                    setIdx(index);
-                  }
-                }}
+            <View key={index}>
+              {item.title && (
+                <Text
+                  style={[
+                    styleSheat.sectionTitle,
+                    colorScheme === "dark"
+                      ? styleSheat.darkText
+                      : styleSheat.lightText,
+                  ]}
+                >
+                  {item.title}
+                </Text>
+              )}
+              <View
+                style={[
+                  styleSheat.mainView,
+                  colorScheme === "dark"
+                    ? styleSheat.darkView
+                    : styleSheat.lightView,
+                ]}
               >
-                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                  <Text
-                    style={[
-                      styleSheat.question,
-                      colorScheme === "dark"
-                        ? styleSheat.darkText
-                        : styleSheat.lightText,
-                    ]}
-                  >
-                    {item.question}
-                  </Text>
-                  <Image
-                    source={
-                      idx === index && visibility === true
-                        ? icons.minus
-                        : icons.plus
+                <TouchableHighlight
+                  activeOpacity={0.8}
+                  style={styleSheat.questionButton}
+                  underlayColor={colorScheme === "dark" ? "#404040" : "#F1F1F1"}
+                  onPress={() => {
+                    if (idx === index && visibility === true) {
+                      setVisibility(false);
+                      setIdx();
+                    } else {
+                      setVisibility(true);
+                      setIdx(index);
                     }
-                    style={[
-                      styleSheat.icon,
-                      { tintColor: colorScheme === "dark" && "#fff" },
-                    ]}
-                  />
-                </View>
-              </TouchableHighlight>
-              {visibility && <AnswerView text={item.answer} index={index} />}
+                  }}
+                >
+                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                    <Text
+                      style={[
+                        styleSheat.question,
+                        colorScheme === "dark"
+                          ? styleSheat.darkText
+                          : styleSheat.lightText,
+                      ]}
+                    >
+                      {item.question}
+                    </Text>
+                    <Image
+                      source={
+                        idx === index && visibility === true
+                          ? icons.minus
+                          : icons.plus
+                      }
+                      style={[
+                        styleSheat.icon,
+                        { tintColor: colorScheme === "dark" && "#fff" },
+                      ]}
+                    />
+                  </View>
+                </TouchableHighlight>
+                {idx === index && visibility && <AnswerView text={item.answer} index={index} />}
+              </View>
             </View>
           ))}
         </ScrollView>
@@ -246,8 +263,6 @@ const styleSheat = StyleSheet.create({
     color: "#111827",
   },
   questionButton: {
-    flexDirection: "row",
-    justifyContent: "space-between",
     padding: 8,
     borderRadius: 12,
   },
@@ -270,5 +285,12 @@ const styleSheat = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
     fontWeight: "500",
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    marginBottom: 8,
+    marginTop: 16,
+    marginHorizontal: 8,
   },
 });
