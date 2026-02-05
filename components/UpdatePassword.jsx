@@ -32,54 +32,28 @@ const UpdatePassword = ({ user }) => {
     } else if (newPassword !== confirmPassword) {
       showAlert("Warning", "Password mismatched!", "warning");
     } else {
-      setIsProcessing(true);
+      // Simulation
+      setTimeout(async () => {
+        const updatedUser = {
+          userId: user.id,
+          serverOTP: "123456",
+          password: newPassword
+        };
 
-      const reqObject = {
-        password: newPassword,
-        confirmPassword: confirmPassword,
-        user: user.id,
-      };
+        await AsyncStorage.setItem(
+          "not-verified-user",
+          JSON.stringify(updatedUser)
+        );
+        await AsyncStorage.removeItem("user");
 
-      try {
-        const response = await fetch(`${apiUrl}/update-password`, {
-          method: "POST",
-          body: JSON.stringify(reqObject),
-          headers: {
-            "Content-Type": "application/json",
-          },
+        showAlert("Information", "Verify it's you! (Demo OTP: 123456)", "info");
+
+        setIsProcessing(false);
+        router.replace({
+          pathname: "verify",
+          params: { timer: true },
         });
-
-        if (response.ok) {
-          const data = await response.json();
-
-          if (data.ok) {
-            await AsyncStorage.setItem(
-              "not-verified-user",
-              JSON.stringify(data.user)
-            );
-            await AsyncStorage.removeItem("user");
-
-            showAlert("Information", "Verify it's you!", "info");
-
-            router.replace({
-              pathname: "verify",
-              params: { timer: true },
-            });
-          } else {
-            showAlert("Warning", data.msg, "warning");
-          }
-        } else {
-          showAlert(
-            "Error",
-            "Password update failed \nCan not process this request!",
-            "error"
-          );
-          setIsProcessing(false);
-        }
-      } catch (error) {
-        console.log(error);
-      }
-      setIsProcessing(false);
+      }, 1000);
     }
   };
 
