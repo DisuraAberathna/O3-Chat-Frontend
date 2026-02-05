@@ -41,73 +41,32 @@ const signin = () => {
     } else if (password.length === 0) {
       showAlert("Warning", "Please enter your password!", "warning");
     } else {
-      setIsProcessing(true);
-      try {
-        const reqObject = {
+      // Simulation
+      setTimeout(async () => {
+        const demoUser = {
+          id: 1,
           username: username,
-          password: password,
+          f_name: "John",
+          l_name: "Doe",
+          email: "john@example.com",
+          profile_img: "https://i.pravatar.cc/150?u=1",
         };
 
-        const response = await fetch(`${apiUrl}/sign-in`, {
-          method: "POST",
-          body: JSON.stringify(reqObject),
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-
-          if (data.ok) {
-            if (data.msg === "Not Verified") {
-              const user = {
-                userId: data.user,
-              };
-
-              await AsyncStorage.setItem(
-                "not-verified-user",
-                JSON.stringify(user)
-              );
-              router.replace({
-                pathname: "verify",
-                params: { timer: false },
-              });
-            } else {
-              if (rememberMe) {
-                const rememberObject = {
-                  username: username,
-                  password: password,
-                };
-
-                await AsyncStorage.setItem(
-                  "remember-me",
-                  JSON.stringify(rememberObject)
-                );
-              } else {
-                await AsyncStorage.removeItem("remember-me");
-              }
-
-              await AsyncStorage.removeItem("new-user");
-              await AsyncStorage.setItem("user", JSON.stringify(data.user));
-              router.replace("home");
-            }
-          } else {
-            showAlert("Warning", data.msg, "warning");
-          }
+        if (rememberMe) {
+          const rememberObject = {
+            username: username,
+            password: password,
+          };
+          await AsyncStorage.setItem("remember-me", JSON.stringify(rememberObject));
         } else {
-          showAlert(
-            "Error",
-            "Sign in failed \nCan not process this request!",
-            "error"
-          );
-          setIsProcessing(false);
+          await AsyncStorage.removeItem("remember-me");
         }
-      } catch (error) {
-        console.error(error);
-      } finally {
+
+        await AsyncStorage.removeItem("new-user");
+        await AsyncStorage.setItem("user", JSON.stringify(demoUser));
         setIsProcessing(false);
-      }
+        router.replace("home");
+      }, 1000);
     }
   };
 
