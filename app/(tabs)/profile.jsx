@@ -64,11 +64,22 @@ const profile = () => {
 
   const getUser = async () => {
     const storedData = await AsyncStorage.getItem("user");
-    if (storedData) {
+    if (storedData) { // Remove fallback if you strictly want demo user only when logged out
       const user = JSON.parse(storedData);
       setUser(user);
     } else {
-      router.replace("sign-in");
+      // Demo User
+      const demoUser = {
+        id: 999,
+        username: "alex_dev",
+        f_name: "Alex",
+        l_name: "Dev",
+        bio: "React Native Developer",
+        mobile: "+1234567890",
+        email: "alex@example.com",
+        profile_img: "https://i.pravatar.cc/150?u=999"
+      };
+      setUser(demoUser);
     }
   };
 
@@ -117,62 +128,41 @@ const profile = () => {
       showAlert("Warning", "Your last name can not has numbers!", "warning");
     } else if (title === "Bio" && value.length === 0) {
     } else {
-      const reqObject = {
-        user: user.id,
-        username: title === "Username" ? value : user.username,
-        f_name: title === "First Name" ? value : user.f_name,
-        l_name: title === "Last Name" ? value : user.l_name,
-        bio: title === "Bio" ? value : user.bio,
-      };
 
       try {
-        const response = await fetch(`${apiUrl}/update`, {
-          method: "POST",
-          body: JSON.stringify(reqObject),
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        // Simulate Update
+        setTimeout(async () => {
+          const updatedUser = { ...user };
+          if (title === "Username") updatedUser.username = value;
+          if (title === "First Name") updatedUser.f_name = value;
+          if (title === "Last Name") updatedUser.l_name = value;
+          if (title === "Bio") updatedUser.bio = value;
 
-        if (response.ok) {
-          const data = await response.json();
-
-          if (data.ok) {
-            AsyncStorage.setItem("user", JSON.stringify(data.user));
-
-            if (title === "Username") {
-              const storedData = await AsyncStorage.getItem("remember-me");
-              if (storedData !== null) {
-                const userData = JSON.parse(storedData);
-
-                const rememberMe = {
-                  username: data.user.username,
-                  password: userData.password,
-                };
-
-                await AsyncStorage.setItem(
-                  "remember-me",
-                  JSON.stringify(rememberMe)
-                );
-              }
+          if (title === "Username") {
+            const storedData = await AsyncStorage.getItem("remember-me");
+            if (storedData !== null) {
+              const userData = JSON.parse(storedData);
+              const rememberMe = {
+                username: updatedUser.username,
+                password: userData.password,
+              };
+              await AsyncStorage.setItem(
+                "remember-me",
+                JSON.stringify(rememberMe)
+              );
             }
-
-            showAlert("Information", "Your profile successfully updated!", "success");
-
-            setBottomSheetVisibility(false);
-            setTitle("");
-            setValue("");
-            getUser();
-          } else {
-            showAlert("Warning", data.msg, "warning");
           }
-        } else {
-          showAlert(
-            "Error",
-            "Profile update failed \nCan not process this request!",
-            "error"
-          );
-        }
+
+          showAlert("Information", "Your profile successfully updated (Demo)!", "success");
+
+          setBottomSheetVisibility(false);
+          setTitle("");
+          setValue("");
+          setUser(updatedUser);
+          // await AsyncStorage.setItem("user", JSON.stringify(updatedUser)); 
+
+        }, 500);
+
       } catch (error) {
         console.log(error);
       }
