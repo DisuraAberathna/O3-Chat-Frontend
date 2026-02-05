@@ -46,42 +46,48 @@ const Chat = () => {
     {
       title: "Delete Chat",
       handlePress: async () => {
-        if (user !== null) {
-          const reqObject = {
-            loggedInId: user.id,
-            otherId: id,
-          };
+        // if (user !== null) { // Auth check bypassed
+        //   const reqObject = {
+        //     loggedInId: user.id,
+        //     otherId: id,
+        //   };
 
-          try {
-            const response = await fetch(`${apiUrl}/delete-chat`, {
-              method: "POST",
-              body: JSON.stringify(reqObject),
-              headers: {
-                "Content-Type": "application/json",
-              },
-            });
+        //   try {
+        //     const response = await fetch(`${apiUrl}/delete-chat`, {
+        //       method: "POST",
+        //       body: JSON.stringify(reqObject),
+        //       headers: {
+        //         "Content-Type": "application/json",
+        //       },
+        //     });
 
-            if (response.ok) {
-              const data = await response.json();
+        //     if (response.ok) {
+        //       const data = await response.json();
 
-              if (data.ok) {
-                setLoad(true);
-              } else {
-                showAlert("Warning", data.msg, "warning");
-              }
-            } else {
-              showAlert(
-                "Error",
-                "Chat deleting failed \nCan not process this request!",
-                "error"
-              );
-            }
-          } catch (error) {
-            console.error(error);
-          }
-        } else {
-          router.replace("sign-in");
-        }
+        //       if (data.ok) {
+        //         setLoad(true);
+        //       } else {
+        //         showAlert("Warning", data.msg, "warning");
+        //       }
+        //     } else {
+        //       showAlert(
+        //         "Error",
+        //         "Chat deleting failed \nCan not process this request!",
+        //         "error"
+        //       );
+        //     }
+        //   } catch (error) {
+        //     console.error(error);
+        //   }
+        // } else {
+        //   router.replace("sign-in");
+        // }
+
+        // Simulation
+        setTimeout(() => {
+          setChats([]);
+          showAlert("Information", "Chat deleted successfully (Demo)", "success");
+        }, 500);
       },
     },
   ];
