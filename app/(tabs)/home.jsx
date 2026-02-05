@@ -19,6 +19,7 @@ import { FlashList } from "@shopify/flash-list";
 import { Image } from "expo-image";
 import icons from "@/constants/icons";
 import PrimaryButton from "@/components/PrimaryButton";
+import { demoUsers } from "@/constants/demoData";
 
 const home = () => {
   const colorScheme = useColorScheme();
@@ -93,38 +94,21 @@ const home = () => {
     const storedData = await AsyncStorage.getItem("user");
 
     try {
-      if (storedData !== null) {
-        const user = JSON.parse(storedData);
+      // Simulate API call with demo data
+      if (storedData !== null || true) { // Bypassing auth check for demo purposes if needed, remove || true if strict
+        // const user = JSON.parse(storedData); // utilizing stored user if needed
 
-        const reqObject = {
-          id: user.id,
-          searchText: searchText,
-        };
-
-        const response = await fetch(`${apiUrl}/load-chat-list`, {
-          method: "POST",
-          body: JSON.stringify(reqObject),
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-
-          if (data.ok) {
-            setIsLoaded(true);
-            setUsers(data.chatList);
-          } else {
-            showAlert("Warning", data.msg, "warning");
+        setTimeout(() => {
+          let data = demoUsers;
+          if (searchText) {
+            data = demoUsers.filter(user =>
+              user.name.toLowerCase().includes(searchText.toLowerCase())
+            );
           }
-        } else {
-          showAlert(
-            "Error",
-            "Loading failed \nCan not process this request!",
-            "error"
-          );
-        }
+          setUsers(data);
+          setIsLoaded(true);
+        }, 500);
+
       } else {
         router.replace("sign-in");
       }
