@@ -56,81 +56,31 @@ const registerForm2 = () => {
         "warning"
       );
     } else {
-      setIsProcessing(true);
-      try {
-        const storedData = await AsyncStorage.getItem("new-user");
+      // Simulation
+      setTimeout(async () => {
+        await AsyncStorage.removeItem("new-user");
 
-        if (storedData !== null) {
-          const new_user = JSON.parse(storedData);
+        const user = {
+          userId: 999,
+        };
 
-          const form = new FormData();
-          form.append("f_name", new_user.firstName);
-          form.append("l_name", new_user.lastName);
-          form.append("password", new_user.password);
-          form.append("image", {
-            uri: image,
-            type: "image/png",
-            name: "avatar.png",
-          });
-          form.append("mobile", mobile);
-          form.append("username", username);
-          form.append("email", email);
+        await AsyncStorage.setItem(
+          "not-verified-user",
+          JSON.stringify(user)
+        );
 
-          console.log("Sending Register request to:", `${apiUrl}/register`);
-          const response = await fetch(`${apiUrl}/register`, {
-            method: "POST",
-            body: form,
-          });
+        showAlert(
+          "Information",
+          "Verification code sent to your email! (Demo)",
+          "success"
+        );
 
-          console.log("Register response status:", response.status);
-
-          if (response.ok) {
-            const data = await response.json();
-            console.log("Register response data:", data);
-
-            if (data.ok) {
-              await AsyncStorage.removeItem("new-user");
-
-              const user = {
-                userId: data.user,
-              };
-
-              await AsyncStorage.setItem(
-                "not-verified-user",
-                JSON.stringify(user)
-              );
-
-              showAlert(
-                "Information",
-                "Verification code sent to your email!",
-                "success"
-              );
-
-              router.replace({
-                pathname: "verify",
-                params: { timer: false },
-              });
-            } else {
-              showAlert("Warning", data.msg, "warning");
-            }
-          } else {
-            console.log("Register response error text:", await response.text());
-            showAlert(
-              "Error",
-              "Registration failed \nCan not process this request!",
-              "error"
-            );
-            setIsProcessing(false);
-          }
-        } else {
-          router.push("register-form-1");
-        }
-      } catch (error) {
-        console.error("Registration Request Error:", error);
-        showAlert("Error", `An unexpected error occurred: ${error.message}`, "error");
-      } finally {
         setIsProcessing(false);
-      }
+        router.replace({
+          pathname: "verify",
+          params: { timer: false },
+        });
+      }, 1000);
     }
   };
 
