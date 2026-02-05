@@ -75,60 +75,27 @@ const verify = () => {
   const verify = async () => {
     if (isCompleteOtp) {
       setIsProcessing(true);
-      try {
-        const storedData = await AsyncStorage.getItem("not-verified-user");
+      // Simulation
+      setTimeout(async () => {
+        await AsyncStorage.removeItem("not-verified-user");
 
-        if (storedData !== null) {
-          const not_verified_user = JSON.parse(storedData);
-
-          const reqObject = {
-            id: not_verified_user.userId,
-            otp: otp,
-            serverOTP: timer === "true" ? not_verified_user.serverOTP : "",
-            password: timer === "true" ? not_verified_user.password : "",
-          };
-
-          const response = await fetch(`${apiUrl}/verify`, {
-            method: "POST",
-            body: JSON.stringify(reqObject),
-            headers: {
-              "Content-Type": "application/json",
-            },
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-
-            if (data.ok) {
-              await AsyncStorage.removeItem("not-verified-user");
-
-              if (timer === "true") {
-                await AsyncStorage.removeItem("remember-me");
-                router.replace("sign-in");
-              } else {
-                await AsyncStorage.setItem("user", JSON.stringify(data.user));
-                router.replace("home");
-              }
-            } else {
-              showAlert("Warning", data.msg, "warning");
-            }
-          } else {
-            showAlert(
-              "Error",
-              "Verification failed \nCan not process this request!",
-              "error"
-            );
-            setIsProcessing(false);
-          }
+        if (timer === "true") {
+          await AsyncStorage.removeItem("remember-me");
+          router.replace("sign-in");
         } else {
-          router.push("register-form-1");
+          const demoUser = {
+            id: 1,
+            username: "demo_user",
+            f_name: "John",
+            l_name: "Doe",
+            email: "john@example.com",
+            profile_img: "https://i.pravatar.cc/150?u=1",
+          };
+          await AsyncStorage.setItem("user", JSON.stringify(demoUser));
+          router.replace("home");
         }
-      } catch (error) {
-        console.error(error);
-        showAlert("Error", "An unexpected error occurred.", "error");
-      } finally {
         setIsProcessing(false);
-      }
+      }, 1000);
     } else {
       showAlert("Warning", "Please complete OTP", "warning");
     }
@@ -136,40 +103,14 @@ const verify = () => {
 
   const resend = async () => {
     try {
-      const storedData = await AsyncStorage.getItem("not-verified-user");
-
-      if (storedData !== null) {
-        const response = await fetch(`${apiUrl}/resend-otp`, {
-          method: "POST",
-          body: storedData,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-
-          if (data.ok) {
-            showAlert(
-              "Information",
-              "OTP sent to your email. \nPlease check it.",
-              "success"
-            );
-          } else {
-            showAlert("Warning", data.msg, "warning");
-          }
-        } else {
-          showAlert(
-            "Error",
-            "OTP resend failed \nCan not process this request!",
-            "error"
-          );
-          setIsProcessing(false);
-        }
-      } else {
-        router.push("register-form-1");
-      }
+      // Simulate Resend
+      setTimeout(() => {
+        showAlert(
+          "Information",
+          "OTP sent to your email (Demo). \nPlease check it.",
+          "success"
+        );
+      }, 500);
     } catch (error) {
       console.error(error);
     }
