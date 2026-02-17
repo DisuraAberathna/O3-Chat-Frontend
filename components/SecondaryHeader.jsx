@@ -10,10 +10,19 @@ import {
 } from "react-native";
 import icons from "@/constants/icons";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { getImageUrl } from "../utils/common";
 
 const SecondaryHeader = ({ data, menu, menuItems, back, backPress, imageVersion }) => {
   const colorScheme = useColorScheme();
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+
+  // Ensure data properties are strings, not arrays
+  const safeData = {
+    id: Array.isArray(data?.id) ? data.id[0] : data?.id,
+    name: Array.isArray(data?.name) ? data.name[0] : data?.name,
+    image: Array.isArray(data?.image) ? data.image[0] : data?.image,
+    bio: Array.isArray(data?.bio) ? data.bio[0] : data?.bio,
+  };
 
   const [popupMenuVisible, setPopupMenuVisible] = useState(false);
   const [userModalVisible, setUserModalVisible] = useState(false);
@@ -94,7 +103,7 @@ const SecondaryHeader = ({ data, menu, menuItems, back, backPress, imageVersion 
         <>
           <Image
             source={{
-              uri: `${apiUrl}/o3_chat/${data.image}?v=${imageVersion || ""}`,
+              uri: getImageUrl(data.image, apiUrl, imageVersion),
             }}
             cachePolicy="none"
             placeholder={{ blurhash }}
@@ -136,7 +145,7 @@ const SecondaryHeader = ({ data, menu, menuItems, back, backPress, imageVersion 
             >
               <Image
                 source={{
-                  uri: `${apiUrl}/o3_chat/${data.image}?v=${imageVersion || ""}`,
+                  uri: getImageUrl(data.image, apiUrl, imageVersion),
                 }}
                 cachePolicy="none"
                 placeholder={{ blurhash }}
