@@ -145,7 +145,7 @@ const SecondaryHeader = ({ data, menu, menuItems, back, backPress, imageVersion 
             >
               <Image
                 source={{
-                  uri: getImageUrl(data.image, apiUrl, imageVersion),
+                  uri: getImageUrl(safeData.image, apiUrl, imageVersion),
                 }}
                 cachePolicy="none"
                 placeholder={{ blurhash }}
@@ -165,7 +165,7 @@ const SecondaryHeader = ({ data, menu, menuItems, back, backPress, imageVersion 
                   styleSheat.usersName,
                 ]}
               >
-                {data.name}
+                {safeData.name}
               </Text>
               <Text
                 style={[
@@ -175,7 +175,7 @@ const SecondaryHeader = ({ data, menu, menuItems, back, backPress, imageVersion 
                   styleSheat.usersName,
                 ]}
               >
-                {data.bio}
+                {safeData.bio}
               </Text>
             </View>
           </View>
