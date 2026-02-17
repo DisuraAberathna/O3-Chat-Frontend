@@ -3,6 +3,7 @@ import React from "react";
 import { StyleSheet, Text, TouchableHighlight, View } from "react-native";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { Image } from "expo-image";
+import { getImageUrl } from "../utils/common";
 
 const Message = ({ data, setReply, setReplyData }) => {
   const colorScheme = useColorScheme();
@@ -87,7 +88,7 @@ const Message = ({ data, setReply, setReplyData }) => {
               {data.replyImg && (
                 <Image
                   source={{
-                    uri: `${apiUrl}/o3_chat/${data.replyImg}`,
+                    uri: getImageUrl(data.replyImg, apiUrl),
                   }}
                   cachePolicy="none"
                   placeholder={{ blurhash }}
@@ -119,7 +120,7 @@ const Message = ({ data, setReply, setReplyData }) => {
         {data.img && (
           <Image
             source={{
-              uri: `${apiUrl}/o3_chat/${data.img}`,
+              uri: getImageUrl(data.img, apiUrl),
             }}
             cachePolicy="none"
             placeholder={{ blurhash }}
@@ -161,8 +162,8 @@ const Message = ({ data, setReply, setReplyData }) => {
             <>
               <Ionicons
                 name={`${data.status === 1
-                    ? "checkmark-outline"
-                    : "checkmark-done-outline"
+                  ? "checkmark-outline"
+                  : "checkmark-done-outline"
                   }`}
                 color={"#15a9f9"}
                 size={14}
