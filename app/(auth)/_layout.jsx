@@ -7,6 +7,7 @@ import { Stack } from "expo-router";
 import React from "react";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { StatusBar } from "expo-status-bar";
 
 const AuthLayout = () => {
   const colorScheme = useColorScheme();
