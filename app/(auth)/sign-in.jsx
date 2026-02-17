@@ -41,32 +41,88 @@ const signin = () => {
     } else if (password.length === 0) {
       showAlert("Warning", "Please enter your password!", "warning");
     } else {
-      // Simulation
-      setTimeout(async () => {
-        const demoUser = {
-          id: 1,
-          username: username,
-          f_name: "John",
-          l_name: "Doe",
-          email: "john@example.com",
-          profile_img: "https://i.pravatar.cc/150?u=1",
-        };
-
-        if (rememberMe) {
-          const rememberObject = {
+      setIsProcessing(true);
+      try {
+        const response = await fetch(`${apiUrl}/sign-in`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
             username: username,
             password: password,
-          };
-          await AsyncStorage.setItem("remember-me", JSON.stringify(rememberObject));
-        } else {
-          await AsyncStorage.removeItem("remember-me");
-        }
+          }),
+        });
 
-        await AsyncStorage.removeItem("new-user");
-        await AsyncStorage.setItem("user", JSON.stringify(demoUser));
+        if (response.ok) {
+          const user = await response.json();
+          console.log(`Sign-In Response:`, JSON.stringify(user));
+
+          // Check if the response indicates an error (even with 200 status)
+          if (user.ok === false) {
+            setIsProcessing(false);
+            showAlert("Error", user.msg || "Invalid credentials", "error");
+            return;
+          }
+
+          // Check if user is not verified
+          if (user.ok === true && user.msg === "Not Verified") {
+            console.log(`User not verified, redirecting to verify page`);
+
+            // Store the user ID and username for verification
+            await AsyncStorage.setItem("not-verified-user", JSON.stringify({
+              userId: user.user,
+              username: username
+            }));
+            await AsyncStorage.removeItem("user");
+            await AsyncStorage.removeItem("new-user");
+
+            setIsProcessing(false);
+            router.replace({
+              pathname: "verify",
+              params: { timer: false },
+            });
+            return;
+          }
+
+          // Valid user data received
+          console.log(`Sign-In Success:`, JSON.stringify(user));
+
+          if (rememberMe) {
+            const rememberObject = {
+              username: username,
+              password: password,
+            };
+            await AsyncStorage.setItem("remember-me", JSON.stringify(rememberObject));
+          } else {
+            await AsyncStorage.removeItem("remember-me");
+          }
+
+          await AsyncStorage.removeItem("new-user");
+          await AsyncStorage.removeItem("not-verified-user");
+
+          // Extract the user object from the response if it's nested
+          const userData = user.user || user;
+          console.log(`User:`, JSON.stringify(userData));
+          await AsyncStorage.setItem("user", JSON.stringify(userData));
+          setIsProcessing(false);
+          router.replace("home");
+        } else {
+          setIsProcessing(false);
+          const errorText = await response.text();
+          console.log(`Sign-In Error Body:`, errorText);
+          try {
+            const errorData = JSON.parse(errorText);
+            showAlert("Error", errorData.msg || "Invalid credentials", "error");
+          } catch (e) {
+            showAlert("Error", "Server error (Invalid credentials)", "error");
+          }
+        }
+      } catch (error) {
         setIsProcessing(false);
-        router.replace("home");
-      }, 1000);
+        console.error("Sign-In Exception:", error);
+        showAlert("Error", "Connection error. Please check your network.", "error");
+      }
     }
   };
 
