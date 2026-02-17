@@ -15,14 +15,14 @@ import PrimaryHeader from "@/components/PrimaryHeader";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { FlashList } from "@shopify/flash-list";
 import { useAppAlert } from "@/components/AlertProvider";
-import { demoUsers } from "@/constants/demoData";
+// import { demoUsers } from "../../constants/demoData";
 
 const NewChat = () => {
   const colorScheme = useColorScheme();
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
   const [searchFieldVisibility, setSearchFieldVisibility] = useState(false);
-  const [users, setUsers] = useState({});
+  const [users, setUsers] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [searchText, setSearchText] = useState("");
@@ -58,10 +58,6 @@ const NewChat = () => {
 
   useEffect(() => {
     loadUsers();
-  }, []);
-
-  useEffect(() => {
-    loadUsers();
   }, [searchText]);
 
   const onRefresh = useCallback(() => {
@@ -71,24 +67,56 @@ const NewChat = () => {
   }, [searchText]);
 
   const loadUsers = async () => {
-    if (searchText.length !== 0) {
-      setIsLoaded(false);
-    }
-
     try {
-      setTimeout(() => {
-        let data = demoUsers;
-        if (searchText) {
-          data = demoUsers.filter(user =>
-            user.name.toLowerCase().includes(searchText.toLowerCase())
-          );
+      // Get the current user's ID
+      const storedData = await AsyncStorage.getItem("user");
+      if (!storedData) {
+        showAlert("Error", "User session not found", "error");
+        return;
+      }
+
+      const user = JSON.parse(storedData);
+      const userId = user.id;
+
+      const payload = {
+        id: userId,
+        text: searchText,
+      };
+
+      console.log(`Sending Load Users Request: ${JSON.stringify(payload)} to ${apiUrl}/load-users`);
+
+      const response = await fetch(`${apiUrl}/load-users`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`Load Users Response:`, JSON.stringify(data));
+
+        // Check if the response indicates an error
+        if (data.ok === false) {
+          showAlert("Error", data.msg || "Failed to load users", "error");
+          setUsers([]);
+        } else {
+          // Extract the users array from the response
+          const usersList = data.users || data;
+          setUsers(usersList);
         }
-        setUsers(data);
-        setIsLoaded(true);
-      }, 500);
+      } else {
+        const errorText = await response.text();
+        console.log(`Load Users Error:`, errorText);
+        showAlert("Error", "Failed to load users", "error");
+        setUsers([]);
+      }
+      setIsLoaded(true);
     } catch (error) {
       console.error(error);
       showAlert("Error", "An unexpected error occurred.", "error");
+      setIsLoaded(true);
     }
   };
 
@@ -119,47 +147,46 @@ const NewChat = () => {
             colorScheme === "dark" ? styles.darkContentView : styles.lightContentView,
           ]}
         >
-          {users ? (
-            <FlashList
-              data={users}
-              renderItem={({ item }) => {
-                return (
-                  <NewChatBox
-                    data={{
-                      id: item.id,
-                      name: item.name,
-                      bio: item.bio,
-                      image: item.profile_img,
-                      imageVersion: imageVersion,
-                    }}
-                  />
-                );
-              }}
-              keyExtractor={(item) => item.id}
-              estimatedItemSize={100}
-              refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-              }
-              showsVerticalScrollIndicator={true}
-              contentContainerStyle={styles.mainView}
-            />
-          ) : (
-            <View
-              style={[
-                styles.emptyView,
-                colorScheme === "dark" ? styles.darkView : styles.lightView,
-              ]}
-            >
-              <Text
+          <FlashList
+            data={users}
+            renderItem={({ item }) => {
+              return (
+                <NewChatBox
+                  data={{
+                    id: item.id,
+                    name: item.name,
+                    bio: item.bio,
+                    image: item.profile_img,
+                    imageVersion: imageVersion,
+                  }}
+                />
+              );
+            }}
+            keyExtractor={(item) => item.id.toString()}
+            estimatedItemSize={100}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+            showsVerticalScrollIndicator={true}
+            contentContainerStyle={styles.mainView}
+            ListEmptyComponent={
+              <View
                 style={[
-                  styles.listHeaderText,
-                  colorScheme === "dark" ? styles.darkText : styles.lightText,
+                  styles.emptyView,
+                  colorScheme === "dark" ? styles.darkView : styles.lightView,
                 ]}
               >
-                Result not found for '{searchText}'
-              </Text>
-            </View>
-          )}
+                <Text
+                  style={[
+                    styles.listHeaderText,
+                    colorScheme === "dark" ? styles.darkText : styles.lightText,
+                  ]}
+                >
+                  Result not found for '{searchText}'
+                </Text>
+              </View>
+            }
+          />
         </View>
       ) : (
         <View style={styles.loadView}>
