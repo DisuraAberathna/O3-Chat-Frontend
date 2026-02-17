@@ -16,6 +16,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { useState } from "react";
 import { useAppAlert } from "./AlertProvider";
+import { uploadToImgBB } from "../utils/imgbb";
+import * as Progress from 'react-native-progress';
 
 const BottomSheet = ({
   handlePress,
@@ -33,6 +35,7 @@ const BottomSheet = ({
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
   const [isProcessing, setIsProcessing] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const { showAlert } = useAppAlert();
 
@@ -76,19 +79,32 @@ const BottomSheet = ({
 
   const saveImage = async (selectedImage) => {
     setIsProcessing(true);
+    setUploadProgress(0);
     try {
-      // Simulation
+      const uploadedUrl = await uploadToImgBB(selectedImage, (progress) => {
+        setUploadProgress(progress);
+      });
+
+      // Update local storage
+      const storedData = await AsyncStorage.getItem("user");
+      if (storedData) {
+        const user = JSON.parse(storedData);
+        user.profile_img = uploadedUrl;
+        await AsyncStorage.setItem("user", JSON.stringify(user));
+      }
+
+      showAlert("Information", "Profile image updated!", "success");
+      onSuccess && onSuccess();
       setTimeout(() => {
-        showAlert("Information", "Profile image updated! (Demo)", "success");
-        onSuccess && onSuccess();
-        setTimeout(() => {
-          setVisibility(false);
-        }, 1500);
-        setIsProcessing(false);
-      }, 1000);
+        setVisibility(false);
+      }, 1500);
+      setIsProcessing(false);
+      setUploadProgress(0);
     } catch (error) {
       console.error(error);
+      showAlert("Error", error.message || "Failed to upload image", "error");
       setIsProcessing(false);
+      setUploadProgress(0);
     }
   };
 
@@ -170,12 +186,32 @@ const BottomSheet = ({
                 </TouchableHighlight>
               </View>
               {autoSave && (
-                <PrimaryButton
-                  title={isProcessing ? "Processing..." : "Save Changes"}
-                  containerStyles={{ width: 208 }}
-                  handlePress={saveImage}
-                  isLoading={isProcessing}
-                />
+                <>
+                  {isProcessing && uploadProgress > 0 && uploadProgress < 1 && (
+                    <View style={{ width: 208, marginBottom: 10, alignItems: 'center' }}>
+                      <Progress.Bar
+                        progress={uploadProgress}
+                        width={null}
+                        color={colorScheme === "dark" ? "#fff" : "#0C4EAC"}
+                        borderWidth={0}
+                        unfilledColor={colorScheme === "dark" ? "#404040" : "#e2e8f0"}
+                        style={{ width: "100%" }}
+                      />
+                      <Text style={[{ marginTop: 5 }, colorScheme === "dark" ? styleSheat.darkText : styleSheat.lightText]}>
+                        Uploading... {Math.round(uploadProgress * 100)}%
+                      </Text>
+                    </View>
+                  )}
+                  <PrimaryButton
+                    title={isProcessing ? "Processing..." : "Save Changes"}
+                    containerStyles={{ width: 208 }}
+                    handlePress={() => {
+                      if (image) saveImage(image);
+                      else showAlert("Warning", "Please select an image first", "warning");
+                    }}
+                    isLoading={isProcessing}
+                  />
+                </>
               )}
             </>
           ) : (
@@ -195,7 +231,7 @@ const BottomSheet = ({
           )}
         </View>
       </View>
-    </Modal>
+    </Modal >
   );
 };
 
