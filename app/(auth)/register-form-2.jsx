@@ -13,6 +13,8 @@ import BottomSheet from "@/components/BottomSheat";
 import { Link, router } from "expo-router";
 import { validateMobile, validateEmail } from "@/hooks/validation";
 import { Ionicons } from "@expo/vector-icons";
+import { uploadToImgBB } from "../../utils/imgbb";
+import * as Progress from 'react-native-progress';
 
 const registerForm2 = () => {
   const colorScheme = useColorScheme();
@@ -27,6 +29,7 @@ const registerForm2 = () => {
   const [bottomSheetVisibility, setBottomSheetVisibility] = useState(false);
   const [title, setTitle] = useState();
   const [value, setValue] = useState();
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const submit = async () => {
     if (image === null) {
@@ -56,31 +59,76 @@ const registerForm2 = () => {
         "warning"
       );
     } else {
-      // Simulation
-      setTimeout(async () => {
-        await AsyncStorage.removeItem("new-user");
+      setIsProcessing(true);
+      setUploadProgress(0);
 
-        const user = {
-          userId: 999,
+      try {
+        // Retrieve data from Step 1
+        const storedData = await AsyncStorage.getItem("new-user");
+        if (!storedData) {
+          showAlert("Error", "Please go back and fill in the previous form.", "error");
+          setIsProcessing(false);
+          return;
+        }
+        const step1Data = JSON.parse(storedData);
+
+        let uploadedImageUrl = null;
+        if (image) {
+          uploadedImageUrl = await uploadToImgBB(image, (progress) => {
+            setUploadProgress(progress);
+          });
+        }
+
+        const reqObject = {
+          f_name: step1Data.firstName,
+          l_name: step1Data.lastName,
+          password: step1Data.password,
+          mobile: mobile,
+          username: username,
+          email: email,
+          profile_img: uploadedImageUrl
         };
 
-        await AsyncStorage.setItem(
-          "not-verified-user",
-          JSON.stringify(user)
-        );
-
-        showAlert(
-          "Information",
-          "Verification code sent to your email! (Demo)",
-          "success"
-        );
-
-        setIsProcessing(false);
-        router.replace({
-          pathname: "verify",
-          params: { timer: false },
+        const response = await fetch(`${apiUrl}/register`, {
+          method: "POST",
+          body: JSON.stringify(reqObject),
+          headers: {
+            "Content-Type": "application/json",
+          },
         });
-      }, 1000);
+
+        if (response.ok) {
+          const data = await response.json();
+
+          await AsyncStorage.removeItem("new-user");
+          await AsyncStorage.setItem("not-verified-user", JSON.stringify({ email: email }));
+
+          showAlert(
+            "Information",
+            "Verification code sent to your email!",
+            "success"
+          );
+
+          setIsProcessing(false);
+          setUploadProgress(0);
+          router.replace({
+            pathname: "verify",
+            params: { timer: false },
+          });
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          console.log(`Registration Error: Status ${response.status}`, JSON.stringify(errorData));
+          showAlert("Error", errorData.msg || "Registration failed", "error");
+          setIsProcessing(false);
+          setUploadProgress(0);
+        }
+
+      } catch (error) {
+        console.error(error);
+        showAlert("Error", "Failed to register user. Check your connection.", "error");
+        setIsProcessing(false);
+        setUploadProgress(0);
+      }
     }
   };
 
@@ -158,6 +206,21 @@ const registerForm2 = () => {
                 keyboardType="email-address"
                 maxLength={100}
               />
+              {isProcessing && uploadProgress > 0 && uploadProgress < 1 && (
+                <View style={{ width: "100%", marginTop: 20, alignItems: 'center' }}>
+                  <Progress.Bar
+                    progress={uploadProgress}
+                    width={null}
+                    color={colorScheme === "dark" ? "#fff" : "#0C4EAC"}
+                    borderWidth={0}
+                    unfilledColor={colorScheme === "dark" ? "#404040" : "#e2e8f0"}
+                    style={{ width: "100%" }}
+                  />
+                  <Text style={[{ marginTop: 5 }, colorScheme === "dark" ? styleSheat.darkText : styleSheat.lightText]}>
+                    Uploading... {Math.round(uploadProgress * 100)}%
+                  </Text>
+                </View>
+              )}
               <PrimaryButton
                 title={isProcessing ? "Processing..." : "Register"}
                 containerStyles={styleSheat.button}
