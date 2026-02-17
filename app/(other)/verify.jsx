@@ -75,27 +75,79 @@ const verify = () => {
   const verify = async () => {
     if (isCompleteOtp) {
       setIsProcessing(true);
-      // Simulation
-      setTimeout(async () => {
-        await AsyncStorage.removeItem("not-verified-user");
-
-        if (timer === "true") {
-          await AsyncStorage.removeItem("remember-me");
-          router.replace("sign-in");
-        } else {
-          const demoUser = {
-            id: 1,
-            username: "demo_user",
-            f_name: "John",
-            l_name: "Doe",
-            email: "john@example.com",
-            profile_img: "https://i.pravatar.cc/150?u=1",
-          };
-          await AsyncStorage.setItem("user", JSON.stringify(demoUser));
-          router.replace("home");
+      try {
+        const storedData = await AsyncStorage.getItem("not-verified-user");
+        if (!storedData) {
+          showAlert("Error", "User data not found", "error");
+          setIsProcessing(false);
+          return;
         }
+        const userData = JSON.parse(storedData);
+
+        // Support both email-based and userId/username-based verification
+        let payload;
+        if (userData.username) {
+          payload = { username: userData.username, otp: parseInt(otp, 10) };
+        } else if (userData.email) {
+          payload = { email: userData.email, otp: parseInt(otp, 10) };
+        } else if (userData.userId) {
+          payload = { userId: userData.userId, otp: parseInt(otp, 10) };
+        } else {
+          showAlert("Error", "Invalid user data", "error");
+          setIsProcessing(false);
+          return;
+        }
+        console.log(`Sending Verify Request: ${JSON.stringify(payload)} to ${apiUrl}/verify`);
+
+        const response = await fetch(`${apiUrl}/verify`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        console.log(`Verify Response Status: ${response.status}`);
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log(`Verify Response:`, JSON.stringify(data));
+
+          // Check if the response indicates an error (even with 200 status)
+          if (data.ok === false) {
+            showAlert("Error", data.msg || "Verification failed", "error");
+            setIsProcessing(false);
+            return;
+          }
+
+          await AsyncStorage.removeItem("not-verified-user");
+
+          if (timer === "true") {
+            await AsyncStorage.removeItem("remember-me");
+            showAlert("Success", "Account verified! Please sign in.", "success");
+            router.replace("sign-in");
+          } else {
+            // Extract the user object from the response
+            const userData = data.user || data;
+            await AsyncStorage.setItem("user", JSON.stringify(userData));
+            showAlert("Success", "Account verified successfully!", "success");
+            router.replace("home");
+          }
+        } else {
+          const errorText = await response.text();
+          console.log("Verify Error Body:", errorText);
+          try {
+            const errorData = JSON.parse(errorText);
+            showAlert("Error", errorData.msg || "Verification failed", "error");
+          } catch (e) {
+            showAlert("Error", "Server error (500)", "error");
+          }
+        }
+
         setIsProcessing(false);
-      }, 1000);
+      } catch (error) {
+        console.error("Verify Exception:", error);
+        showAlert("Error", "Verification failed. Check network.", "error");
+        setIsProcessing(false);
+      }
     } else {
       showAlert("Warning", "Please complete OTP", "warning");
     }
@@ -103,16 +155,47 @@ const verify = () => {
 
   const resend = async () => {
     try {
-      // Simulate Resend
-      setTimeout(() => {
-        showAlert(
-          "Information",
-          "OTP sent to your email (Demo). \nPlease check it.",
-          "success"
-        );
-      }, 500);
+      const storedData = await AsyncStorage.getItem("not-verified-user");
+      if (storedData) {
+        const userData = JSON.parse(storedData);
+
+        // Support both email-based and userId/username-based resend
+        let payload;
+        if (userData.username) {
+          payload = { username: userData.username };
+        } else if (userData.email) {
+          payload = { email: userData.email };
+        } else if (userData.userId) {
+          payload = { userId: userData.userId };
+        } else {
+          showAlert("Error", "Invalid user data", "error");
+          return;
+        }
+
+
+        console.log(`Sending Resend OTP Request: ${JSON.stringify(payload)} to ${apiUrl}/resend-otp`);
+
+        const response = await fetch(`${apiUrl}/resend-otp`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+          showAlert(
+            "Information",
+            "OTP sent to your email! Please check it.",
+            "success"
+          );
+        } else {
+          showAlert("Error", "Failed to resend OTP", "error");
+        }
+      } else {
+        showAlert("Error", "User session expired", "error");
+      }
     } catch (error) {
       console.error(error);
+      showAlert("Error", "Connection error", "error");
     }
   };
 
