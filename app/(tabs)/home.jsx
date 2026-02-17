@@ -19,7 +19,7 @@ import { FlashList } from "@shopify/flash-list";
 import { Image } from "expo-image";
 import icons from "@/constants/icons";
 import PrimaryButton from "@/components/PrimaryButton";
-import { demoUsers } from "@/constants/demoData";
+// import { demoUsers } from "../../constants/demoData";
 
 const home = () => {
   const colorScheme = useColorScheme();
@@ -95,20 +95,15 @@ const home = () => {
 
     try {
       // Simulate API call with demo data
-      if (storedData !== null || true) { // Bypassing auth check for demo purposes if needed, remove || true if strict
-        // const user = JSON.parse(storedData); // utilizing stored user if needed
+      if (storedData !== null) {
+        const user = JSON.parse(storedData);
 
-        setTimeout(() => {
-          let data = demoUsers;
-          if (searchText) {
-            data = demoUsers.filter(user =>
-              user.name.toLowerCase().includes(searchText.toLowerCase())
-            );
-          }
+        const response = await fetch(`${apiUrl}/home/${user.id}?search=${encodeURIComponent(searchText)}`);
+        if (response.ok) {
+          const data = await response.json();
           setUsers(data);
-          setIsLoaded(true);
-        }, 500);
-
+        }
+        setIsLoaded(true);
       } else {
         router.replace("sign-in");
       }
