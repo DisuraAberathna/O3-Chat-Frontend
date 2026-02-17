@@ -21,7 +21,8 @@ import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { FlashList } from "@shopify/flash-list";
-import { demoChats } from "@/constants/demoData";
+import { uploadToImgBB } from "../../utils/imgbb";
+import * as Progress from 'react-native-progress';
 
 const Chat = () => {
   const colorScheme = useColorScheme();
@@ -41,53 +42,49 @@ const Chat = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [load, setLoad] = useState(true);
   const [imageVersion, setImageVersion] = useState(Date.now());
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
 
   const menuItems = [
     {
       title: "Delete Chat",
       handlePress: async () => {
-        // if (user !== null) { // Auth check bypassed
-        //   const reqObject = {
-        //     loggedInId: user.id,
-        //     otherId: id,
-        //   };
+        if (user !== null) {
+          const reqObject = {
+            loggedInId: user.id,
+            otherId: id,
+          };
 
-        //   try {
-        //     const response = await fetch(`${apiUrl}/delete-chat`, {
-        //       method: "POST",
-        //       body: JSON.stringify(reqObject),
-        //       headers: {
-        //         "Content-Type": "application/json",
-        //       },
-        //     });
+          try {
+            const response = await fetch(`${apiUrl}/delete-chat`, {
+              method: "POST",
+              body: JSON.stringify(reqObject),
+              headers: {
+                "Content-Type": "application/json",
+              },
+            });
 
-        //     if (response.ok) {
-        //       const data = await response.json();
+            if (response.ok) {
+              const data = await response.json();
 
-        //       if (data.ok) {
-        //         setLoad(true);
-        //       } else {
-        //         showAlert("Warning", data.msg, "warning");
-        //       }
-        //     } else {
-        //       showAlert(
-        //         "Error",
-        //         "Chat deleting failed \nCan not process this request!",
-        //         "error"
-        //       );
-        //     }
-        //   } catch (error) {
-        //     console.error(error);
-        //   }
-        // } else {
-        //   router.replace("sign-in");
-        // }
-
-        // Simulation
-        setTimeout(() => {
-          setChats([]);
-          showAlert("Information", "Chat deleted successfully (Demo)", "success");
-        }, 500);
+              if (data.ok) {
+                setLoad(true);
+              } else {
+                showAlert("Warning", data.msg, "warning");
+              }
+            } else {
+              showAlert(
+                "Error",
+                "Chat deleting failed \nCan not process this request!",
+                "error"
+              );
+            }
+          } catch (error) {
+            console.error(error);
+          }
+        } else {
+          router.replace("sign-in");
+        }
       },
     },
   ];
@@ -100,19 +97,20 @@ const Chat = () => {
     try {
       const storedData = await AsyncStorage.getItem("user");
 
-      // if (storedData) { // Auth check bypassed for demo
-      // const user = JSON.parse(storedData);
-      // setUser(user);
+      if (storedData) {
+        const user = JSON.parse(storedData);
+        setUser(user);
 
-      setTimeout(() => {
-        setChats(demoChats);
+        const response = await fetch(`${apiUrl}/message/${user.id}/${id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setChats(data);
+        }
         setIsLoaded(true);
         setLoad(false);
-      }, 500);
-
-      // } else {
-      //   router.replace("sign-in");
-      // }
+      } else {
+        router.replace("sign-in");
+      }
     } catch (error) {
       console.error(error);
     }
@@ -130,34 +128,59 @@ const Chat = () => {
   };
 
   const sendMessage = async () => {
-    // if (user !== null) { // Auth check bypassed
-    if (msgImage || message.length !== 0) {
+    if (user !== null) {
+      if (msgImage || message.length !== 0) {
+        let uploadedImageUrl = null;
 
-      // Simulate send
-      setTimeout(() => {
-        const newMsg = {
-          id: Date.now(),
+        if (msgImage) {
+          try {
+            setIsUploading(true);
+            setUploadProgress(0);
+            uploadedImageUrl = await uploadToImgBB(msgImage, (progress) => {
+              setUploadProgress(progress);
+            });
+          } catch (error) {
+            showAlert("Error", "Failed to upload image", "error");
+            setIsUploading(false);
+            return;
+          } finally {
+            setIsUploading(false);
+            setUploadProgress(0);
+          }
+        }
+
+        const reqObject = {
+          senderId: user.id,
+          receiverId: id,
           msg: message,
-          time: "Just now",
-          side: "right",
-          status: 1,
-          img: msgImage,
+          image: uploadedImageUrl
         };
-        setChats(prev => [...prev, newMsg]);
 
-        setMessage("");
-        setMsgImage(null);
-        setReply(0);
-        setReplyData({});
-        setFocusedInput(false);
+        try {
+          const response = await fetch(`${apiUrl}/message/send`, {
+            method: "POST",
+            body: JSON.stringify(reqObject),
+            headers: { "Content-Type": "application/json" }
+          });
 
-        // Allow list to update then scroll
-        setTimeout(() => goToBottom(), 100);
-      }, 100);
+          if (response.ok) {
+            setLoad(true);
+            setMessage("");
+            setMsgImage(null);
+            setReply(0);
+            setReplyData({});
+            setFocusedInput(false);
+          } else {
+            showAlert("Error", "Failed to send message", "error");
+          }
+        } catch (error) {
+          console.error(error);
+          showAlert("Error", "Failed to send message", "error");
+        }
+      }
+    } else {
+      router.replace("sign-in");
     }
-    // } else {
-    //   router.replace("sign-in");
-    // }
   };
 
   const onRefresh = useCallback(() => {
@@ -182,7 +205,12 @@ const Chat = () => {
       }
     >
       <SecondaryHeader
-        data={{ id: id, name: name, image: image, bio: bio }}
+        data={{
+          id: Array.isArray(id) ? id[0] : id,
+          name: Array.isArray(name) ? name[0] : name,
+          image: Array.isArray(image) ? image[0] : image,
+          bio: Array.isArray(bio) ? bio[0] : bio
+        }}
         back={true}
         backPress={() => {
           router.replace("home");
@@ -355,7 +383,10 @@ const Chat = () => {
           )}
           {msgImage && (
             <View style={{ paddingHorizontal: 12, paddingVertical: 8 }}>
-              <View style={{ alignItems: "flex-end" }}>
+              <View style={{ alignItems: "flex-end", flexDirection: 'row', justifyContent: 'space-between' }}>
+                <Text style={colorScheme === "dark" ? styleSheat.darkText : styleSheat.lightText}>
+                  Image Selected
+                </Text>
                 <TouchableHighlight
                   underlayColor={colorScheme === "dark" ? "#404040" : "#F1F1F1"}
                   activeOpacity={0.7}
@@ -377,10 +408,25 @@ const Chat = () => {
               </View>
               <Image
                 source={{ uri: msgImage }}
-                style={{ width: "100%", height: 200 }}
+                style={{ width: "100%", height: 200, marginTop: 8, borderRadius: 8 }}
                 contentFit="contain"
                 cachePolicy="none"
               />
+              {isUploading && (
+                <View style={{ marginTop: 10, alignItems: 'center' }}>
+                  <Progress.Bar
+                    progress={uploadProgress}
+                    width={null}
+                    color={colorScheme === "dark" ? "#fff" : "#0C4EAC"}
+                    borderWidth={0}
+                    unfilledColor={colorScheme === "dark" ? "#404040" : "#e2e8f0"}
+                    style={{ width: "100%" }}
+                  />
+                  <Text style={[{ marginTop: 5 }, colorScheme === "dark" ? styleSheat.darkText : styleSheat.lightText]}>
+                    Uploading... {Math.round(uploadProgress * 100)}%
+                  </Text>
+                </View>
+              )}
             </View>
           )}
           <View style={styleSheat.messageInputView}>
