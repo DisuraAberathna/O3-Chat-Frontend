@@ -64,22 +64,27 @@ const profile = () => {
 
   const getUser = async () => {
     const storedData = await AsyncStorage.getItem("user");
-    if (storedData) { // Remove fallback if you strictly want demo user only when logged out
-      const user = JSON.parse(storedData);
+    if (storedData) {
+      let user = JSON.parse(storedData);
+      console.log("Loaded User Profile:", JSON.stringify(user));
+
+      // Check if the stored data is an error response instead of valid user data
+      if (user.ok === false) {
+        console.log("Invalid user data detected, clearing and redirecting to sign-in");
+        await AsyncStorage.removeItem("user");
+        router.replace("/(auth)/sign-in");
+        return;
+      }
+
+      // Extract the user object if it's nested (for backward compatibility)
+      if (user.ok === true && user.user) {
+        console.log("Extracting nested user data");
+        user = user.user;
+        // Re-save the corrected data
+        await AsyncStorage.setItem("user", JSON.stringify(user));
+      }
+
       setUser(user);
-    } else {
-      // Demo User
-      const demoUser = {
-        id: 999,
-        username: "alex_dev",
-        f_name: "Alex",
-        l_name: "Dev",
-        bio: "React Native Developer",
-        mobile: "+1234567890",
-        email: "alex@example.com",
-        profile_img: "https://i.pravatar.cc/150?u=999"
-      };
-      setUser(demoUser);
     }
   };
 
@@ -159,7 +164,7 @@ const profile = () => {
           setTitle("");
           setValue("");
           setUser(updatedUser);
-          // await AsyncStorage.setItem("user", JSON.stringify(updatedUser)); 
+          await AsyncStorage.setItem("user", JSON.stringify(updatedUser));
 
         }, 500);
 
