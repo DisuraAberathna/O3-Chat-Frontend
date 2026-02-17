@@ -3,6 +3,7 @@ import { StyleSheet, TouchableOpacity } from "react-native";
 import icons from "@/constants/icons";
 import { Image } from "expo-image";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { getImageUrl } from "../utils/common";
 
 const PrimaryImagePicker = ({
   image,
@@ -40,7 +41,7 @@ const PrimaryImagePicker = ({
             source={
               image === null
                 ? {
-                  uri: `${apiUrl}/o3_chat/${user.profile_img}?v=${imageVersion || ""}`,
+                  uri: getImageUrl(user.profile_img, apiUrl, imageVersion),
                 }
                 : { uri: image }
             }
