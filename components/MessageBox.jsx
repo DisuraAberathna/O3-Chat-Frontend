@@ -5,6 +5,7 @@ import { TouchableHighlight } from "react-native";
 import { router } from "expo-router";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
+import { getImageUrl } from "../utils/common";
 
 const MessageBox = ({ data }) => {
   const colorScheme = useColorScheme();
@@ -36,7 +37,7 @@ const MessageBox = ({ data }) => {
       <View style={styleSheat.innerView}>
         <Image
           source={{
-            uri: `${apiUrl}/o3_chat/${data.image}?v=${data.imageVersion || ""}`,
+            uri: getImageUrl(data.image, apiUrl, data.imageVersion),
           }}
           cachePolicy="none"
           placeholder={{ blurhash }}
