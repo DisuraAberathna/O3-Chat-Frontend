@@ -4,6 +4,8 @@ import {
   ScrollView,
   TouchableHighlight,
   StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useAppAlert } from "@/components/AlertProvider";
 import React, { useEffect } from "react";
@@ -135,41 +137,79 @@ const profile = () => {
     } else {
 
       try {
-        // Simulate Update
-        setTimeout(async () => {
-          const updatedUser = { ...user };
-          if (title === "Username") updatedUser.username = value;
-          if (title === "First Name") updatedUser.f_name = value;
-          if (title === "Last Name") updatedUser.l_name = value;
-          if (title === "Bio") updatedUser.bio = value;
+        let endpoint = "";
+        let body = {};
 
-          if (title === "Username") {
-            const storedData = await AsyncStorage.getItem("remember-me");
-            if (storedData !== null) {
-              const userData = JSON.parse(storedData);
-              const rememberMe = {
-                username: updatedUser.username,
-                password: userData.password,
-              };
-              await AsyncStorage.setItem(
-                "remember-me",
-                JSON.stringify(rememberMe)
-              );
+        if (title === "Username") {
+          endpoint = "/update-username";
+          body = {
+            id: user._id || user.id,
+            username: value,
+          };
+        } else {
+          endpoint = "/update";
+          body = {
+            user: user._id || user.id,
+            f_name: title === "First Name" ? value : user.f_name,
+            l_name: title === "Last Name" ? value : user.l_name,
+            bio: title === "Bio" ? value : user.bio,
+          };
+        }
+
+        const response = await fetch(`${apiUrl}${endpoint}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(body),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.ok) {
+            const updatedUser = { ...user };
+            if (title === "Username") updatedUser.username = value;
+            if (title === "First Name") updatedUser.f_name = value;
+            if (title === "Last Name") updatedUser.l_name = value;
+            if (title === "Bio") updatedUser.bio = value;
+
+            if (title === "Username") {
+              const storedData = await AsyncStorage.getItem("remember-me");
+              if (storedData !== null) {
+                const userData = JSON.parse(storedData);
+                const rememberMe = {
+                  username: updatedUser.username,
+                  password: userData.password,
+                };
+                await AsyncStorage.setItem(
+                  "remember-me",
+                  JSON.stringify(rememberMe)
+                );
+              }
             }
+
+            showAlert("Success", "Profile successfully updated!", "success");
+
+            setBottomSheetVisibility(false);
+            setTitle("");
+            setValue("");
+            setUser(updatedUser);
+            await AsyncStorage.setItem("user", JSON.stringify(updatedUser));
+          } else {
+            showAlert("Error", result.msg || "Update failed", "error");
           }
-
-          showAlert("Information", "Your profile successfully updated (Demo)!", "success");
-
-          setBottomSheetVisibility(false);
-          setTitle("");
-          setValue("");
-          setUser(updatedUser);
-          await AsyncStorage.setItem("user", JSON.stringify(updatedUser));
-
-        }, 500);
-
+        } else {
+          const errorText = await response.text();
+          try {
+            const errorJson = JSON.parse(errorText);
+            showAlert("Error", errorJson.msg || "Update failed", "error");
+          } catch (e) {
+            showAlert("Error", "Update failed", "error");
+          }
+        }
       } catch (error) {
         console.log(error);
+        showAlert("Error", "Network error", "error");
       }
     }
   };
@@ -243,168 +283,177 @@ const profile = () => {
           : styleSheat.lightMainView
       }
     >
-      <PrimaryHeader title="User Profile" menu={true} menuItems={menuItems} />
-      <View
-        style={[
-          { flex: 1 },
-          colorScheme === "dark"
-            ? styleSheat.darkContentView
-            : styleSheat.lightContentView,
-        ]}
+      <PrimaryHeader title="User Profile" menu={false} menuItems={menuItems} />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
       >
-        {user && (
-          <ScrollView>
-            <View style={styleSheat.imageView}>
-              <PrimaryImagePicker
-                image={image}
-                title={"Edit Profile Picture"}
-                user={user}
-                setTitle={setTitle}
-                setValue={setValue}
-                setBottomSheetVisibility={setBottomSheetVisibility}
-                imageVersion={imageVersion}
-              />
-            </View>
-            <View
-              style={[
-                styleSheat.view,
-                colorScheme === "dark"
-                  ? styleSheat.darkView
-                  : styleSheat.lightView,
-              ]}
+        <View
+          style={[
+            { flex: 1 },
+            colorScheme === "dark"
+              ? styleSheat.darkContentView
+              : styleSheat.lightContentView,
+          ]}
+        >
+          {user && (
+            <ScrollView
+              contentContainerStyle={{ paddingBottom: 20 }}
+              keyboardShouldPersistTaps="handled"
             >
-              <View style={styleSheat.titleView}>
-                <Text
-                  style={[
-                    styleSheat.title,
-                    colorScheme === "dark"
-                      ? styleSheat.darkText
-                      : styleSheat.lightText,
-                  ]}
-                >
-                  Personal Details
-                </Text>
+              <View style={styleSheat.imageView}>
+                <PrimaryImagePicker
+                  image={image}
+                  title={"Edit Profile Picture"}
+                  user={user}
+                  setTitle={setTitle}
+                  setValue={setValue}
+                  setBottomSheetVisibility={setBottomSheetVisibility}
+                  imageVersion={imageVersion}
+                />
               </View>
-              {personalDetials.map((item, index) => (
-                <View key={index}>
+              <View
+                style={[
+                  styleSheat.view,
+                  colorScheme === "dark"
+                    ? styleSheat.darkView
+                    : styleSheat.lightView,
+                ]}
+              >
+                <View style={styleSheat.titleView}>
+                  <Text
+                    style={[
+                      styleSheat.title,
+                      colorScheme === "dark"
+                        ? styleSheat.darkText
+                        : styleSheat.lightText,
+                    ]}
+                  >
+                    Personal Details
+                  </Text>
+                </View>
+                {personalDetials.map((item, index) => (
+                  <View key={index}>
+                    <DetialInput
+                      title={item.title}
+                      value={item.value}
+                      editable={item.editable}
+                      handlePress={item.handlePress}
+                    />
+                  </View>
+                ))}
+                <BottomSheet
+                  visibility={bottomSheetVisibility}
+                  setVisibility={setBottomSheetVisibility}
+                  image={image}
+                  setImage={setImage}
+                  title={title}
+                  value={value}
+                  autoSave={true}
+                  setValue={setValue}
+                  onSuccess={() => {
+                    setImageVersion(Date.now());
+                    setImage(null);
+                    getUser();
+                  }}
+                  handlePress={
+                    (title === "Username" ||
+                      title === "First Name" ||
+                      title === "Last Name" ||
+                      title === "Bio") &&
+                    update
+                  }
+                />
+              </View>
+              <View
+                style={[
+                  styleSheat.view,
+                  colorScheme === "dark"
+                    ? styleSheat.darkView
+                    : styleSheat.lightView,
+                ]}
+              >
+                <View style={styleSheat.titleView}>
+                  <Text
+                    style={[
+                      styleSheat.title,
+                      colorScheme === "dark"
+                        ? styleSheat.darkText
+                        : styleSheat.lightText,
+                    ]}
+                  >
+                    Contact Details
+                  </Text>
+                </View>
+                {contactDetails.map((item, index) => (
                   <DetialInput
                     title={item.title}
                     value={item.value}
-                    editable={item.editable}
-                    handlePress={item.handlePress}
+                    key={index}
                   />
+                ))}
+              </View>
+              <View
+                style={[
+                  styleSheat.view,
+                  colorScheme === "dark"
+                    ? styleSheat.darkView
+                    : styleSheat.lightView,
+                  { marginBottom: 32 },
+                ]}
+              >
+                <View style={styleSheat.titleView}>
+                  <Text
+                    style={[
+                      styleSheat.title,
+                      colorScheme === "dark"
+                        ? styleSheat.darkText
+                        : styleSheat.lightText,
+                    ]}
+                  >
+                    Security Details
+                  </Text>
                 </View>
-              ))}
-              <BottomSheet
-                visibility={bottomSheetVisibility}
-                setVisibility={setBottomSheetVisibility}
-                image={image}
-                setImage={setImage}
-                title={title}
-                value={value}
-                autoSave={true}
-                setValue={setValue}
-                onSuccess={() => {
-                  setImageVersion(Date.now());
-                  getUser();
-                }}
-                handlePress={
-                  (title === "Username" ||
-                    title === "First Name" ||
-                    title === "Last Name" ||
-                    title === "Bio") &&
-                  update
-                }
-              />
-            </View>
-            <View
-              style={[
-                styleSheat.view,
-                colorScheme === "dark"
-                  ? styleSheat.darkView
-                  : styleSheat.lightView,
-              ]}
-            >
-              <View style={styleSheat.titleView}>
-                <Text
-                  style={[
-                    styleSheat.title,
-                    colorScheme === "dark"
-                      ? styleSheat.darkText
-                      : styleSheat.lightText,
-                  ]}
-                >
-                  Contact Details
-                </Text>
+                <View style={styleSheat.passwordButtonView}>
+                  <TouchableHighlight
+                    activeOpacity={0.8}
+                    style={styleSheat.questionButton}
+                    underlayColor={colorScheme === "dark" ? "#404040" : "#F1F1F1"}
+                    onPress={() => {
+                      if (visibility === true) {
+                        setVisibility(false);
+                      } else {
+                        setVisibility(true);
+                      }
+                    }}
+                  >
+                    <View style={styleSheat.questionInnerView}>
+                      <Text
+                        style={[
+                          styleSheat.question,
+                          colorScheme === "dark"
+                            ? styleSheat.darkText
+                            : styleSheat.lightText,
+                        ]}
+                      >
+                        Change Password
+                      </Text>
+                      <Image
+                        source={visibility === true ? icons.minus : icons.plus}
+                        style={[
+                          styleSheat.icon,
+                          { tintColor: colorScheme === "dark" && "#fff" },
+                        ]}
+                      />
+                    </View>
+                  </TouchableHighlight>
+                  {visibility && <UpdatePassword user={user} />}
+                </View>
               </View>
-              {contactDetails.map((item, index) => (
-                <DetialInput
-                  title={item.title}
-                  value={item.value}
-                  key={index}
-                />
-              ))}
-            </View>
-            <View
-              style={[
-                styleSheat.view,
-                colorScheme === "dark"
-                  ? styleSheat.darkView
-                  : styleSheat.lightView,
-                { marginBottom: 32 },
-              ]}
-            >
-              <View style={styleSheat.titleView}>
-                <Text
-                  style={[
-                    styleSheat.title,
-                    colorScheme === "dark"
-                      ? styleSheat.darkText
-                      : styleSheat.lightText,
-                  ]}
-                >
-                  Security Details
-                </Text>
-              </View>
-              <View style={styleSheat.passwordButtonView}>
-                <TouchableHighlight
-                  activeOpacity={0.8}
-                  style={styleSheat.questionButton}
-                  underlayColor={colorScheme === "dark" ? "#404040" : "#F1F1F1"}
-                  onPress={() => {
-                    if (visibility === true) {
-                      setVisibility(false);
-                    } else {
-                      setVisibility(true);
-                    }
-                  }}
-                >
-                  <View style={styleSheat.questionInnerView}>
-                    <Text
-                      style={[
-                        styleSheat.question,
-                        colorScheme === "dark"
-                          ? styleSheat.darkText
-                          : styleSheat.lightText,
-                      ]}
-                    >
-                      Change Password
-                    </Text>
-                    <Image
-                      source={visibility === true ? icons.minus : icons.plus}
-                      style={[
-                        styleSheat.icon,
-                        { tintColor: colorScheme === "dark" && "#fff" },
-                      ]}
-                    />
-                  </View>
-                </TouchableHighlight>
-                {visibility && <UpdatePassword user={user} />}
-              </View>
-            </View>
-          </ScrollView>
-        )}
-      </View>
+            </ScrollView>
+          )}
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };

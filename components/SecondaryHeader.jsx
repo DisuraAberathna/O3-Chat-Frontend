@@ -11,6 +11,7 @@ import {
 import icons from "@/constants/icons";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { getImageUrl } from "../utils/common";
+import { router } from "expo-router";
 
 const SecondaryHeader = ({ data, menu, menuItems, back, backPress, imageVersion }) => {
   const colorScheme = useColorScheme();
@@ -100,7 +101,7 @@ const SecondaryHeader = ({ data, menu, menuItems, back, backPress, imageVersion 
         underlayColor={colorScheme === "dark" ? "#404040" : "#F1F1F1"}
         onPress={openUserModal}
       >
-        <>
+        <View style={{ flexDirection: "row", alignItems: "center", flex: 1, columnGap: 12 }}>
           <Image
             source={{
               uri: getImageUrl(safeData.image, apiUrl, imageVersion),
@@ -125,7 +126,7 @@ const SecondaryHeader = ({ data, menu, menuItems, back, backPress, imageVersion 
           >
             {safeData.name}
           </Text>
-        </>
+        </View>
       </TouchableHighlight>
       <Modal
         animationType="fade"
@@ -143,20 +144,35 @@ const SecondaryHeader = ({ data, menu, menuItems, back, backPress, imageVersion 
                   : styleSheat.lightView,
               ]}
             >
-              <Image
-                source={{
-                  uri: getImageUrl(safeData.image, apiUrl, imageVersion),
+              <TouchableHighlight
+                onPress={() => {
+                  closeUserModal();
+                  router.push({
+                    pathname: "/image-view",
+                    params: {
+                      uri: getImageUrl(safeData.image, apiUrl, imageVersion),
+                      name: safeData.name,
+                    },
+                  });
                 }}
-                cachePolicy="none"
-                placeholder={{ blurhash }}
-                style={[
-                  styleSheat.modalImage,
-                  colorScheme === "dark"
-                    ? { borderColor: "#4b5563" }
-                    : { borderColor: "#d1d5db" },
-                ]}
-                contentFit="contain"
-              />
+                underlayColor="transparent"
+                style={{ borderRadius: 9999 }}
+              >
+                <Image
+                  source={{
+                    uri: getImageUrl(safeData.image, apiUrl, imageVersion),
+                  }}
+                  cachePolicy="none"
+                  placeholder={{ blurhash }}
+                  style={[
+                    styleSheat.modalImage,
+                    colorScheme === "dark"
+                      ? { borderColor: "#4b5563" }
+                      : { borderColor: "#d1d5db" },
+                  ]}
+                  contentFit="contain"
+                />
+              </TouchableHighlight>
               <Text
                 style={[
                   colorScheme === "dark"

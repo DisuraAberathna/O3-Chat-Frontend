@@ -9,9 +9,10 @@ import {
   ScrollView,
   Text,
   View,
+  TouchableOpacity,
 } from "react-native";
 import { useAppAlert } from "@/components/AlertProvider";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { StyleSheet } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useState } from "react";
@@ -19,14 +20,12 @@ import { FlashList } from "@shopify/flash-list";
 import { Image } from "expo-image";
 import icons from "@/constants/icons";
 import PrimaryButton from "@/components/PrimaryButton";
-// import { demoUsers } from "../../constants/demoData";
 
 const home = () => {
   const colorScheme = useColorScheme();
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
   const { showAlert } = useAppAlert();
 
-  const [searchFieldVisibility, setSearchFieldVisibility] = useState(false);
   const [users, setUsers] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -34,21 +33,6 @@ const home = () => {
   const [imageVersion, setImageVersion] = useState(Date.now());
 
   const menuItems = [
-    {
-      title: "New Chat",
-      handlePress: () => {
-        router.push({
-          pathname: "new-chat",
-          params: { back: "home" },
-        });
-      },
-    },
-    {
-      title: "Search",
-      handlePress: () => {
-        setSearchFieldVisibility(true);
-      },
-    },
     {
       title: "Help",
       handlePress: () => {
@@ -67,50 +51,143 @@ const home = () => {
     },
   ];
 
-  const hideSearch = () => {
-    setSearchFieldVisibility(false);
-  };
+  const ws = React.useRef(null);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    loadUsers();
+    const init = async () => {
+      const storedData = await AsyncStorage.getItem("user");
+      if (storedData) {
+        const u = JSON.parse(storedData);
+        setUser(u);
+      } else {
+        router.replace("sign-in");
+      }
+    };
+    init();
   }, []);
 
   useEffect(() => {
-    loadUsers();
-  }, [searchText]);
+    if (user) {
+      const wsUrl = apiUrl.replace("http", "ws") + `/chat/${user.id}`;
+      ws.current = new WebSocket(wsUrl);
+
+      ws.current.onopen = () => {
+        console.log("Connected to WebSocket (Home)");
+        loadUsers();
+      };
+
+      ws.current.onmessage = (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          if (data.type === "chat_list") {
+            setUsers(data.chatList);
+            setIsLoaded(true);
+          } else if (data.type === "message") {
+            setUsers(prevUsers => {
+              const list = [...prevUsers];
+              const otherId = (data.from_id == user.id && data.to_id == user.id)
+                ? user.id
+                : (data.from_id == user.id ? data.to_id : data.from_id);
+
+              const index = list.findIndex(u => u.id == otherId);
+              let updatedItem;
+
+              if (index !== -1) {
+                updatedItem = { ...list[index] };
+                list.splice(index, 1);
+              } else {
+                updatedItem = {
+                  id: otherId,
+                  name: data.from?.f_name ? (data.from.f_name + " " + data.from.l_name) : "New Message",
+                  profile_img: data.from?.profile_url || null,
+                  bio: data.from?.bio || "",
+                  count: 0
+                };
+              }
+
+              updatedItem.msg = data.message && data.message.trim() !== "" ? data.message : (data.image ? "Image" : "");
+              updatedItem.time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+              updatedItem.view = (data.from_id == user.id && data.to_id != user.id);
+
+              if (data.from_id != user.id) {
+                updatedItem.count = (updatedItem.count || 0) + 1;
+              }
+
+              if (data.status_id) updatedItem.status = data.status_id;
+              else if (data.status) updatedItem.status = data.status;
+              else updatedItem.status = 2;
+
+              list.unshift(updatedItem);
+              return list;
+            });
+          } else if (data.type === "seen") {
+            setUsers(prevUsers => {
+              const list = [...prevUsers];
+
+              const otherId = data.seen_by == user.id ? data.from_id : data.seen_by;
+
+              const index = list.findIndex(u => u.id == otherId);
+              if (index !== -1) {
+                const item = list[index];
+                if (data.seen_by == user.id) {
+                  list[index] = { ...item, count: 0 };
+                } else if (item.view) {
+                  list[index] = { ...item, status: 3 };
+                }
+                return list;
+              }
+              return list;
+            });
+          }
+        } catch (error) {
+          console.error("WS Parse Error", error);
+        }
+      };
+
+      ws.current.onclose = () => {
+        console.log("WebSocket Disconnected (Home)");
+      };
+
+      ws.current.onerror = (e) => {
+        console.log("WebSocket Error", e.message);
+      };
+
+      return () => {
+        if (ws.current) ws.current.close();
+      };
+    }
+  }, [user]);
+
+
+
+  const loadUsers = () => {
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({
+        type: "load_chats",
+        searchText: ""
+      }));
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      loadUsers();
+    }, [user])
+  );
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     setImageVersion(Date.now());
     loadUsers();
-    setRefreshing(false);
-  }, []);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 2000);
+  }, [user]);
 
-  const loadUsers = async () => {
-    if (searchText.length !== 0) {
-      setIsLoaded(false);
-    }
-
-    const storedData = await AsyncStorage.getItem("user");
-
-    try {
-      // Simulate API call with demo data
-      if (storedData !== null) {
-        const user = JSON.parse(storedData);
-
-        const response = await fetch(`${apiUrl}/home/${user.id}?search=${encodeURIComponent(searchText)}`);
-        if (response.ok) {
-          const data = await response.json();
-          setUsers(data);
-        }
-        setIsLoaded(true);
-      } else {
-        router.replace("sign-in");
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  const filteredUsers = users.filter((u) =>
+    u.name.toLowerCase().includes(searchText.toLowerCase())
+  );
 
   return (
     <SafeAreaView
@@ -123,13 +200,12 @@ const home = () => {
     >
       <PrimaryHeader
         title="O3 Chat"
-        menu={true}
+        menu={false}
         menuItems={menuItems}
-        searchFieldVisibility={searchFieldVisibility}
+        searchFieldVisibility={true}
         searchText={searchText}
         setSearchText={setSearchText}
-        closeOnPress={hideSearch}
-        searchOnPress={loadUsers}
+        searchOnPress={() => { }}
       />
       <View
         style={[
@@ -141,7 +217,7 @@ const home = () => {
       >
         {isLoaded ? (
           <FlashList
-            data={users}
+            data={filteredUsers}
             renderItem={({ item }) => {
               return (
                 <MessageBox
@@ -217,7 +293,7 @@ const home = () => {
               )
             }
             ListFooterComponent={
-              users.length === 0 && searchText.length !== 0 ? (
+              filteredUsers.length === 0 && searchText.length !== 0 ? (
                 <View
                   style={[
                     {
@@ -250,6 +326,22 @@ const home = () => {
             <ActivityIndicator size={"large"} color={"#0C4EAC"} />
           </View>
         )}
+        <TouchableOpacity
+          style={styleSheat.fab}
+          onPress={() => {
+            router.push({
+              pathname: "new-chat",
+              params: { back: "home" },
+            });
+          }}
+          activeOpacity={0.7}
+        >
+          <Image
+            source={icons.plus}
+            contentFit="contain"
+            style={{ width: 30, height: 30, tintColor: "#fff" }}
+          />
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -258,6 +350,23 @@ const home = () => {
 export default home;
 
 const styleSheat = StyleSheet.create({
+  fab: {
+    position: "absolute",
+    bottom: 20,
+    right: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#0C4EAC",
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    zIndex: 10
+  },
   darkMainView: {
     flex: 1,
     backgroundColor: "#000000",

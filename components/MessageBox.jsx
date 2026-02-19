@@ -21,7 +21,7 @@ const MessageBox = ({ data }) => {
         colorScheme === "dark" ? styleSheat.darkView : styleSheat.lightView,
       ]}
       onPress={() => {
-        router.replace({
+        router.push({
           pathname: "/chat",
           params: {
             id: data.id,
@@ -35,20 +35,35 @@ const MessageBox = ({ data }) => {
       activeOpacity={0.7}
     >
       <View style={styleSheat.innerView}>
-        <Image
-          source={{
-            uri: getImageUrl(data.image, apiUrl, data.imageVersion),
+        <TouchableHighlight
+          onPress={() => {
+            router.push({
+              pathname: "/image-view",
+              params: {
+                uri: getImageUrl(data.image, apiUrl, data.imageVersion),
+                name: data.name
+              },
+            });
           }}
-          cachePolicy="none"
-          placeholder={{ blurhash }}
-          style={[
-            styleSheat.profileImage,
-            colorScheme === "dark"
-              ? { borderColor: "#4b5563" }
-              : { borderColor: "#d1d5db" },
-          ]}
-          contentFit="contain"
-        />
+          underlayColor="transparent"
+          style={{ borderRadius: 9999 }}
+        >
+          <Image
+            key={data.imageVersion}
+            source={{
+              uri: getImageUrl(data.image, apiUrl, data.imageVersion),
+            }}
+            cachePolicy="none"
+            placeholder={{ blurhash }}
+            style={[
+              styleSheat.profileImage,
+              colorScheme === "dark"
+                ? { borderColor: "#4b5563" }
+                : { borderColor: "#d1d5db" },
+            ]}
+            contentFit="contain"
+          />
+        </TouchableHighlight>
         <View style={styleSheat.mainView}>
           <View style={styleSheat.nameMessageView}>
             <Text
@@ -64,11 +79,14 @@ const MessageBox = ({ data }) => {
             <View style={styleSheat.messageView}>
               {data.view && (
                 <Ionicons
-                  name={`${data.status === 1
-                    ? "checkmark-outline"
-                    : "checkmark-done-outline"
-                    }`}
-                  color={"#15a9f9"}
+                  name={data.status === 1 ? "checkmark" : "checkmark-done"}
+                  color={
+                    data.status === 3 || data.status === 4
+                      ? "#15a9f9"
+                      : colorScheme === "dark"
+                        ? "#9ca3af"
+                        : "#6b7280"
+                  }
                   size={14}
                 />
               )}
@@ -80,7 +98,7 @@ const MessageBox = ({ data }) => {
                     : styleSheat.lightText,
                 ]}
               >
-                {`${data.msg.substring(0, 40)}...`}
+                {data.msg.length > 40 ? `${data.msg.substring(0, 40)}...` : data.msg}
               </Text>
             </View>
           </View>

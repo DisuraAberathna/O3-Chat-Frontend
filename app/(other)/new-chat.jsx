@@ -21,7 +21,7 @@ const NewChat = () => {
   const colorScheme = useColorScheme();
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
-  const [searchFieldVisibility, setSearchFieldVisibility] = useState(false);
+  const [searchFieldVisibility, setSearchFieldVisibility] = useState(true);
   const [users, setUsers] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -31,12 +31,6 @@ const NewChat = () => {
   const { showAlert } = useAppAlert();
 
   const menuItems = [
-    {
-      title: "Search",
-      handlePress: () => {
-        setSearchFieldVisibility(true);
-      },
-    },
     {
       title: "Help",
       handlePress: () => {
@@ -53,20 +47,24 @@ const NewChat = () => {
   ];
 
   const hideSearch = () => {
-    setSearchFieldVisibility(false);
+    // Keep it visible as per new design
   };
 
   useEffect(() => {
-    loadUsers();
+    const delayDebounceFn = setTimeout(() => {
+      loadUsers(searchText);
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
   }, [searchText]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     setImageVersion(Date.now());
-    loadUsers().then(() => setRefreshing(false));
+    loadUsers(searchText).then(() => setRefreshing(false));
   }, [searchText]);
 
-  const loadUsers = async () => {
+  const loadUsers = async (currentSearchText = searchText) => {
     try {
       // Get the current user's ID
       const storedData = await AsyncStorage.getItem("user");
@@ -80,7 +78,7 @@ const NewChat = () => {
 
       const payload = {
         id: userId,
-        text: searchText,
+        searchText: currentSearchText,
       };
 
       console.log(`Sending Load Users Request: ${JSON.stringify(payload)} to ${apiUrl}/load-users`);
@@ -132,7 +130,7 @@ const NewChat = () => {
         backPress={() => {
           router.back();
         }}
-        menu={true}
+        menu={false}
         menuItems={menuItems}
         searchFieldVisibility={searchFieldVisibility}
         searchText={searchText}

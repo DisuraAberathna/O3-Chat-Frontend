@@ -3,6 +3,7 @@ import React from "react";
 import { StyleSheet, Text, TouchableHighlight, View } from "react-native";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { Image } from "expo-image";
+import { router } from "expo-router";
 import { getImageUrl } from "../utils/common";
 
 const Message = ({ data, setReply, setReplyData }) => {
@@ -118,21 +119,34 @@ const Message = ({ data, setReply, setReplyData }) => {
           </View>
         )}
         {data.img && (
-          <Image
-            source={{
-              uri: getImageUrl(data.img, apiUrl),
+          <TouchableHighlight
+            onPress={() => {
+              router.push({
+                pathname: "/image-view",
+                params: {
+                  uri: getImageUrl(data.img, apiUrl),
+                  name: "Shared Image"
+                },
+              });
             }}
-            cachePolicy="none"
-            placeholder={{ blurhash }}
-            placeholderContentFit="fill"
-            style={{
-              width: "100%",
-              height: 400,
-              borderRadius: 8,
-              marginBottom: 4,
-            }}
-            contentFit="cover"
-          />
+            underlayColor="transparent"
+            style={{ width: "100%", marginBottom: 4 }}
+          >
+            <Image
+              source={{
+                uri: getImageUrl(data.img, apiUrl),
+              }}
+              cachePolicy="none"
+              placeholder={{ blurhash }}
+              placeholderContentFit="fill"
+              style={{
+                width: "100%",
+                height: 400,
+                borderRadius: 8,
+              }}
+              contentFit="cover"
+            />
+          </TouchableHighlight>
         )}
         {data.msg && (
           <Text
@@ -161,12 +175,15 @@ const Message = ({ data, setReply, setReplyData }) => {
           {data.side === "right" && (
             <>
               <Ionicons
-                name={`${data.status === 1
-                  ? "checkmark-outline"
-                  : "checkmark-done-outline"
-                  }`}
-                color={"#15a9f9"}
-                size={14}
+                name={data.status === 1 ? "checkmark" : "checkmark-done"}
+                color={
+                  data.status === 3 || data.status === 4
+                    ? "#15a9f9"
+                    : colorScheme === "dark"
+                      ? "#9ca3af"
+                      : "#6b7280"
+                }
+                size={18}
               />
             </>
           )}

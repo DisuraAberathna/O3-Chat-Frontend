@@ -20,7 +20,7 @@ const NewChatBox = ({ data }) => {
         colorScheme === "dark" ? styleSheat.darkView : styleSheat.lightView,
       ]}
       onPress={() => {
-        router.replace({
+        router.push({
           pathname: "/chat",
           params: {
             id: data.id,
@@ -35,6 +35,7 @@ const NewChatBox = ({ data }) => {
     >
       <View style={styleSheat.innerView}>
         <Image
+          key={data.imageVersion}
           source={{
             uri: getImageUrl(data.image, apiUrl, data.imageVersion),
           }}

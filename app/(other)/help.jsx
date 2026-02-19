@@ -98,15 +98,7 @@ const fqas = [
   },
 ];
 
-const MenuItems = [
-  {
-    title: "Sign Out",
-    handlePress: async () => {
-      await AsyncStorage.removeItem("user");
-      router.replace("/");
-    },
-  },
-];
+
 
 const Help = () => {
   const colorScheme = useColorScheme();
@@ -145,8 +137,7 @@ const Help = () => {
         backPress={() => {
           router.back();
         }}
-        menu={true}
-        menuItems={MenuItems}
+        menu={false}
       />
       <View
         style={[

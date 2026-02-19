@@ -10,6 +10,7 @@ import images from "@/constants/images";
 import { Link, router } from "expo-router";
 import { Image } from "expo-image";
 import { containsNumbers, validatePassword } from "@/hooks/validation";
+import PasswordStrength from "../../components/PasswordStrength";
 
 const registerForm1 = () => {
   const colorScheme = useColorScheme();
@@ -164,6 +165,7 @@ const registerForm1 = () => {
                 handleChangeText={setPassword}
                 value={password}
               />
+              <PasswordStrength password={password} />
               <PrimaryButton
                 title={isProcessing ? "Processing..." : "Continue"}
                 containerStyles={styleSheat.button}

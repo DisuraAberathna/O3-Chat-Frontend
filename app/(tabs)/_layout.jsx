@@ -14,16 +14,6 @@ const TabIcon = ({ icon, color, name, focused }) => {
                 style={styleSheat.icon}
                 contentFit="contain"
             />
-            <Text
-                numberOfLines={1}
-                style={[
-                    styleSheat.iconText,
-                    { color: color },
-                    focused && { fontWeight: "600" },
-                ]}
-            >
-                {name}
-            </Text>
         </View>
     );
 };
@@ -91,6 +81,21 @@ const TabLayout = () => {
                             icon={icons.profile}
                             color={color}
                             name="Profile"
+                            focused={focused}
+                        />
+                    ),
+                }}
+            />
+            <Tabs.Screen
+                name="settings"
+                options={{
+                    title: "Settings",
+                    headerShown: false,
+                    tabBarIcon: ({ color, focused }) => (
+                        <TabIcon
+                            icon={icons.gear}
+                            color={color}
+                            name="Settings"
                             focused={focused}
                         />
                     ),

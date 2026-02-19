@@ -6,6 +6,8 @@ import {
   Text,
   TouchableHighlight,
   View,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import PrimaryInput from "@/components/PrimaryInput";
 import PrimaryButton from "@/components/PrimaryButton";
@@ -89,8 +91,24 @@ const BottomSheet = ({
       const storedData = await AsyncStorage.getItem("user");
       if (storedData) {
         const user = JSON.parse(storedData);
-        user.profile_img = uploadedUrl;
-        await AsyncStorage.setItem("user", JSON.stringify(user));
+        // Update Backend
+        const response = await fetch(`${apiUrl}/update`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            user: user.id || user._id,
+            profile_img: uploadedUrl,
+          }),
+        });
+
+        if (response.ok) {
+          user.profile_img = uploadedUrl;
+          await AsyncStorage.setItem("user", JSON.stringify(user));
+        } else {
+          throw new Error("Failed to update profile image on server");
+        }
       }
 
       showAlert("Information", "Profile image updated!", "success");
@@ -110,7 +128,10 @@ const BottomSheet = ({
 
   return (
     <Modal visible={visibility} transparent={true}>
-      <View style={styleSheat.mainView}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styleSheat.mainView}
+      >
         <View
           style={[
             styleSheat.view,
@@ -221,16 +242,55 @@ const BottomSheet = ({
                 value={value}
                 handleChangeText={setValue}
               />
+              {title === "Bio" && (
+                <View style={styleSheat.suggestionsContainer}>
+                  <Text style={[styleSheat.suggestionsTitle, colorScheme === "dark" ? styleSheat.darkText : styleSheat.lightText]}>
+                    Suggestions:
+                  </Text>
+                  <View style={styleSheat.suggestionsList}>
+                    {[
+                      "Available",
+                      "At work",
+                      "In a meeting",
+                      "Sleeping",
+                      "Urgent calls only",
+                    ].map((suggestion, index) => (
+                      <TouchableHighlight
+                        key={index}
+                        style={[
+                          styleSheat.suggestionChip,
+                          colorScheme === "dark" ? styleSheat.darkChip : styleSheat.lightChip
+                        ]}
+                        underlayColor={colorScheme === "dark" ? "#404040" : "#e2e8f0"}
+                        onPress={() => setValue(suggestion)}
+                      >
+                        <Text style={[styleSheat.suggestionText, colorScheme === "dark" ? styleSheat.darkText : styleSheat.lightText]}>
+                          {suggestion}
+                        </Text>
+                      </TouchableHighlight>
+                    ))}
+                  </View>
+                </View>
+              )}
               <PrimaryButton
                 title={isProcessing ? "Processing..." : "Save Changes"}
                 containerStyles={styleSheat.button}
-                handlePress={handlePress}
+                handlePress={async () => {
+                  setIsProcessing(true);
+                  try {
+                    await handlePress();
+                  } catch (error) {
+                    console.log(error);
+                  } finally {
+                    setIsProcessing(false);
+                  }
+                }}
                 isLoading={isProcessing}
               />
             </View>
           )}
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal >
   );
 };
@@ -252,7 +312,7 @@ const styleSheat = StyleSheet.create({
   },
   view: {
     width: "100%",
-    height: 240,
+    height: 320,
     alignItems: "center",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
@@ -312,5 +372,36 @@ const styleSheat = StyleSheet.create({
   button: {
     width: 208,
     marginTop: 16,
+  },
+  suggestionsContainer: {
+    width: '100%',
+    marginTop: 10,
+  },
+  suggestionsTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 5,
+  },
+  suggestionsList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  suggestionChip: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  darkChip: {
+    backgroundColor: '#1f2937',
+    borderColor: '#374151',
+  },
+  lightChip: {
+    backgroundColor: '#f3f4f6',
+    borderColor: '#e5e7eb',
+  },
+  suggestionText: {
+    fontSize: 12,
   },
 });

@@ -58,7 +58,8 @@ const PrimaryInput = ({
           secureTextEntry={
             (title === "Password" && !showPassword) ||
             (title === "New Password" && !showPassword) ||
-            (title === "Confirm Password" && !showPassword)
+            (title === "Confirm Password" && !showPassword) ||
+            (title === "Old Password" && !showPassword)
           }
           onFocus={() => setFocusedInput(title)}
           onBlur={() => setFocusedInput(null)}
@@ -66,7 +67,8 @@ const PrimaryInput = ({
         />
         {(title === "Password" ||
           title === "New Password" ||
-          title === "Confirm Password") && (
+          title === "Confirm Password" ||
+          title === "Old Password") && (
             <TouchableOpacity
               onPress={() => setShowPassword(!showPassword)}
               activeOpacity={0.7}

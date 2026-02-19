@@ -7,11 +7,15 @@ export const uploadToImgBB = (imageUri, onProgress) => {
             return;
         }
 
+        const filename = imageUri.split('/').pop();
+        const match = /\.(\w+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : `image`;
+
         const formData = new FormData();
         formData.append("image", {
             uri: imageUri,
-            name: "user_upload.jpg",
-            type: "image/jpeg",
+            name: filename,
+            type: type,
         });
 
         const xhr = new XMLHttpRequest();

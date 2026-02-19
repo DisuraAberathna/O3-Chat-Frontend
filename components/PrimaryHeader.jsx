@@ -150,50 +150,48 @@ const PrimaryHeader = ({
             popupMenuVisible && ClosePopupMenuModal();
           }}
         >
-          <TouchableHighlight
-            activeOpacity={0.7}
-            style={styleSheat.closeButton}
-            underlayColor={colorScheme === "dark" ? "#404040" : "#F1F1F1"}
-            onPress={closeOnPress}
-          >
-            <Image
-              source={icons.collapse}
-              contentFit="contain"
-              style={[
-                styleSheat.closeIcon,
-                { tintColor: colorScheme === "dark" ? "#fff" : "#0C4EAC" },
-              ]}
-            />
-          </TouchableHighlight>
-          <TextInput
-            placeholder="Search Users..."
-            placeholderTextColor="#7b7b8b"
+          <View
             style={[
-              styleSheat.searchFeild,
-              colorScheme === "dark"
-                ? styleSheat.darkText
-                : styleSheat.lightText,
+              styleSheat.searchContainer,
+              colorScheme === "dark" ? { borderColor: "#6b7280" } : { borderColor: "#cbd5e1" },
             ]}
-            inputMode="search"
-            autoCorrect={false}
-            value={searchText}
-            onChangeText={setSearchText}
-          />
-          <TouchableHighlight
-            activeOpacity={0.7}
-            style={styleSheat.closeButton}
-            underlayColor={colorScheme === "dark" ? "#404040" : "#F1F1F1"}
-            onPress={searchOnPress}
           >
             <Image
               source={icons.search}
               contentFit="contain"
               style={[
-                styleSheat.searchIcon,
-                { tintColor: colorScheme === "dark" && "#fff" },
+                styleSheat.searchIconInput,
+                { tintColor: "#7b7b8b" },
               ]}
             />
-          </TouchableHighlight>
+            <TextInput
+              placeholder="Search Users..."
+              placeholderTextColor="#7b7b8b"
+              style={[
+                styleSheat.searchFeild,
+                colorScheme === "dark"
+                  ? styleSheat.darkText
+                  : styleSheat.lightText,
+              ]}
+              inputMode="search"
+              autoCorrect={false}
+              value={searchText}
+              onChangeText={setSearchText}
+            />
+            {searchText.length > 0 && (
+              <TouchableHighlight
+                activeOpacity={0.7}
+                underlayColor="transparent"
+                onPress={() => setSearchText("")}
+              >
+                <Image
+                  source={icons.close}
+                  contentFit="contain"
+                  style={{ width: 10, height: 10, tintColor: "#7b7b8b" }}
+                />
+              </TouchableHighlight>
+            )}
+          </View>
         </View>
       )}
     </>
@@ -264,32 +262,25 @@ const styleSheat = StyleSheet.create({
     fontWeight: "500",
   },
   searchView: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
     paddingHorizontal: 14,
     paddingBottom: 14,
     borderBottomWidth: 2,
-    columnGap: 8,
   },
-  closeButton: {
-    padding: 8,
-    borderRadius: 9999,
-  },
-  closeIcon: {
-    width: 18,
-    height: 18,
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    height: 40,
   },
   searchFeild: {
     flex: 1,
-    fontWeight: "600",
+    fontWeight: "500",
     fontSize: 16,
-    lineHeight: 24,
-    paddingHorizontal: 1.5,
-    borderBottomWidth: 1,
-    borderColor: "#6b7280",
+    paddingHorizontal: 8,
   },
-  searchIcon: {
+  searchIconInput: {
     width: 18,
     height: 18,
   },

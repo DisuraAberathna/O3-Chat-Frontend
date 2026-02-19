@@ -38,6 +38,7 @@ const PrimaryImagePicker = ({
       {user !== null && user.profile_img !== null ? (
         <>
           <Image
+            key={imageVersion}
             source={
               image === null
                 ? {

@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { router } from "expo-router";
@@ -11,24 +11,53 @@ import { Image } from "expo-image";
 const index = () => {
   const colorScheme = useColorScheme();
 
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const submit = async () => {
-    setIsProcessing(true);
-    if (await AsyncStorage.getItem("user")) {
-      router.replace("home");
-    } else if (await AsyncStorage.getItem("new-user")) {
-      router.replace("register-form-1");
-    } else if (await AsyncStorage.getItem("not-verified-user")) {
-      router.replace({
-        pathname: "verify",
-        params: { timer: false },
-      });
-    } else {
-      router.replace("sign-in");
+  useEffect(() => {
+    checkUser();
+  }, []);
+
+  const checkUser = async () => {
+    try {
+      if (await AsyncStorage.getItem("user")) {
+        router.replace("home");
+      } else if (await AsyncStorage.getItem("new-user")) {
+        router.replace("register-form-1");
+      } else if (await AsyncStorage.getItem("not-verified-user")) {
+        router.replace({
+          pathname: "verify",
+          params: { timer: false },
+        });
+      } else {
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.log(error);
+      setIsLoading(false);
     }
-    setIsProcessing(false);
   };
+
+  const submit = () => {
+    router.replace("sign-in");
+  };
+
+  if (isLoading) {
+    return (
+      <SafeAreaView
+        style={[
+          colorScheme === "dark" ? styleSheat.darkView : styleSheat.lightView,
+          { justifyContent: "center", alignItems: "center" }
+        ]}
+      >
+        <Image
+          source={images.logo}
+          style={{ width: 100, height: 100, marginBottom: 20 }}
+          contentFit="contain"
+        />
+        <ActivityIndicator size="large" color="#0C4EAC" />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView
@@ -70,11 +99,10 @@ const index = () => {
           </View>
           <View style={{ paddingBottom: 50, width: "100%" }}>
             <PrimaryButton
-              title={isProcessing ? "Processing..." : "Continue"}
+              title={"Continue"}
               handlePress={submit}
               containerStyles={styleSheat.button}
               textStyles={styleSheat.buttonText}
-              isLoading={isProcessing}
             />
           </View>
         </View>
